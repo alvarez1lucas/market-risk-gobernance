@@ -1,0 +1,1 @@
+{"timestamp": "2026-05-06T20:53:16.163106+00:00", "event_type": "pipeline_completed", "actor": "pipeline", "payload": {"kupiec_pval": 0.7419327009526281, "es_975": -0.04636376351118088, "sr117_status": "approved"}, "previous_hash": "GENESIS", "hash": "73129e82b1ebfc259af0b913e738d8500728435f43f6902dc3544be8961a9945"}

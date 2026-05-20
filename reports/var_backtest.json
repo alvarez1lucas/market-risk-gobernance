@@ -1,0 +1,16 @@
+{
+  "model_name": "TFT Market Risk Model",
+  "confidence_level": 0.99,
+  "n_observations": 250,
+  "n_exceedances": 2,
+  "exceedance_rate": 0.008,
+  "expected_rate": 0.010000000000000009,
+  "kupiec_statistic": 0.10843521623679919,
+  "kupiec_pval": 0.7419327009526281,
+  "kupiec_pass": true,
+  "christoffersen_statistic": 0.032421362193037595,
+  "christoffersen_pval": 0.8571059909380325,
+  "christoffersen_pass": true,
+  "traffic_light_zone": "green",
+  "overall_status": "approved"
+}

@@ -1,0 +1,121 @@
+{
+  "gfc_2008": {
+    "scenario": {
+      "name": "Global Financial Crisis 2008",
+      "description": "Colapso Lehman Brothers \u2014 peor drawdown desde 1929",
+      "equity_shock": -0.57,
+      "credit_spread_shock": 1800,
+      "rate_shock": -300,
+      "fx_shock": 0.15,
+      "vol_multiplier": 4.2,
+      "horizon_days": 252
+    },
+    "total_loss_pct": -1.9071629507479404,
+    "max_daily_loss_pct": -0.04555216819474327,
+    "stressed_annual_vol": 0.45730841045898263,
+    "var_99_1day": -0.016495872478514202,
+    "es_975_1day": -0.01825243951367953,
+    "capital_requirement_multiplier": 4.2
+  },
+  "covid_2020": {
+    "scenario": {
+      "name": "COVID-19 Market Crash Q1 2020",
+      "description": "Crash m\u00e1s r\u00e1pido de la historia \u2014 -34% en 33 d\u00edas",
+      "equity_shock": -0.34,
+      "credit_spread_shock": 900,
+      "rate_shock": -150,
+      "fx_shock": 0.08,
+      "vol_multiplier": 3.1,
+      "horizon_days": 33
+    },
+    "total_loss_pct": -12.213205519290511,
+    "max_daily_loss_pct": -0.04823254337511844,
+    "stressed_annual_vol": 0.33753716010067764,
+    "var_99_1day": -0.019176247658889384,
+    "es_975_1day": -0.02093281469405471,
+    "capital_requirement_multiplier": 3.1
+  },
+  "rate_shock_2022": {
+    "scenario": {
+      "name": "Fed Rate Hike Cycle 2022",
+      "description": "Subida de tasas m\u00e1s agresiva desde 1980 \u2014 bonos -20%",
+      "equity_shock": -0.25,
+      "credit_spread_shock": 400,
+      "rate_shock": 525,
+      "fx_shock": -0.05,
+      "vol_multiplier": 1.8,
+      "horizon_days": 365
+    },
+    "total_loss_pct": 0.11399110448145724,
+    "max_daily_loss_pct": -0.04502651044305812,
+    "stressed_annual_vol": 0.1959893187681354,
+    "var_99_1day": -0.015970214726829052,
+    "es_975_1day": -0.01772678176199438,
+    "capital_requirement_multiplier": 1.8
+  },
+  "svb_2023": {
+    "scenario": {
+      "name": "SVB Bank Run 2023",
+      "description": "Colapso SVB \u2014 crisis de confianza bancaria regional",
+      "equity_shock": -0.15,
+      "credit_spread_shock": 250,
+      "rate_shock": -50,
+      "fx_shock": 0.03,
+      "vol_multiplier": 1.6,
+      "horizon_days": 21
+    },
+    "total_loss_pct": -8.162916919001908,
+    "max_daily_loss_pct": -0.04717915232172739,
+    "stressed_annual_vol": 0.17421272779389815,
+    "var_99_1day": -0.018122856605498328,
+    "es_975_1day": -0.019879423640663658,
+    "capital_requirement_multiplier": 1.6
+  },
+  "dfast_adverse": {
+    "scenario": {
+      "name": "DFAST Severely Adverse Scenario",
+      "description": "Escenario regulatorio Fed DFAST \u2014 recesi\u00f3n severa",
+      "equity_shock": -0.55,
+      "credit_spread_shock": 600,
+      "rate_shock": -400,
+      "fx_shock": 0.1,
+      "vol_multiplier": 3.5,
+      "horizon_days": 336
+    },
+    "total_loss_pct": -1.1061212840812737,
+    "max_daily_loss_pct": -0.04534383486140993,
+    "stressed_annual_vol": 0.38109034204915215,
+    "var_99_1day": -0.016287539145180868,
+    "es_975_1day": -0.018044106180346197,
+    "capital_requirement_multiplier": 3.5
+  },
+  "latam_crisis": {
+    "scenario": {
+      "name": "LATAM Tail Risk",
+      "description": "Crisis cambiaria emergente con contagio \u2014 relevante BCRA",
+      "equity_shock": -0.4,
+      "credit_spread_shock": 800,
+      "rate_shock": 200,
+      "fx_shock": 0.35,
+      "vol_multiplier": 2.5,
+      "horizon_days": 90
+    },
+    "total_loss_pct": -4.7044513105362995,
+    "max_daily_loss_pct": -0.0462796814222565,
+    "stressed_annual_vol": 0.27220738717796583,
+    "var_99_1day": -0.017223385706027432,
+    "es_975_1day": -0.018979952741192758,
+    "capital_requirement_multiplier": 2.5
+  },
+  "monte_carlo": {
+    "n_simulations": 10000,
+    "distribution": "t-Student (df=5)",
+    "var_results": {
+      "var_1": -0.02134537647578102,
+      "var_2": -0.016852987621792853,
+      "var_5": -0.013592057500731967
+    },
+    "es_975": -0.02191234998418944,
+    "worst_1pct_avg": -0.026757947826993016
+  }
+}

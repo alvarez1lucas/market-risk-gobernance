@@ -1,0 +1,102 @@
+{
+  "model_name": "Market VaR \u2014 TFT v1.0",
+  "validation_date": "2026-05-06T17:53:16.069358",
+  "validator": "AI Governance Framework \u2014 Automated Validation",
+  "overall_status": "approved",
+  "overall_score": 0.9541666666666666,
+  "checks": [
+    {
+      "section": "Conceptual Soundness",
+      "requirement": "Teor\u00eda estad\u00edstica del modelo documentada",
+      "status": "pass",
+      "evidence": "TFT basado en Lim et al. (2021) \u2014 paper peer-reviewed. LSTM con atenci\u00f3n \u2014 Bahdanau et al. (2015). GARCH(1,1) \u2014 Bollerslev (1986).",
+      "score": 1.0
+    },
+    {
+      "section": "Conceptual Soundness",
+      "requirement": "Supuestos del modelo explicitados y validados",
+      "status": "pass",
+      "evidence": "Supuestos documentados en docs/regulatory/. Distribuci\u00f3n t-Student para colas pesadas \u2014 validado con QQ-plot.",
+      "score": 0.9
+    },
+    {
+      "section": "Conceptual Soundness",
+      "requirement": "Comparaci\u00f3n con benchmark regulatorio (GARCH)",
+      "status": "pass",
+      "evidence": "TFT MAE inferior al GARCH en validaci\u00f3n. Ambos modelos en reports/model_comparison.json.",
+      "score": 1.0
+    },
+    {
+      "section": "Conceptual Soundness",
+      "requirement": "Datos de entrenamiento documentados y validados",
+      "status": "pass",
+      "evidence": "Fuentes: yfinance + FRED (datos p\u00fablicos). Data quality checks en src/data/ingest.py. Per\u00edodo: 2000-2024 \u2014 cubre GFC, COVID, ciclo de tasas.",
+      "score": 0.95
+    },
+    {
+      "section": "Ongoing Monitoring",
+      "requirement": "Sistema de drift monitoring implementado",
+      "status": "pass",
+      "evidence": "PSI calculado diariamente sobre distribuci\u00f3n de retornos. Alertas autom\u00e1ticas si PSI > 0.10 (warning) o > 0.20 (breach).",
+      "score": 1.0
+    },
+    {
+      "section": "Ongoing Monitoring",
+      "requirement": "Model Card y documentaci\u00f3n regulatoria generada",
+      "status": "pass",
+      "evidence": "Model Card auto-generada en reports/model_card.html. Incluye: prop\u00f3sito, limitaciones, m\u00e9tricas, fairness, EU AI Act mapping.",
+      "score": 1.0
+    },
+    {
+      "section": "Ongoing Monitoring",
+      "requirement": "Audit trail de decisiones del modelo",
+      "status": "pass",
+      "evidence": "Log inmutable en src/governance/audit_trail.py. Cada predicci\u00f3n, cambio de threshold y validaci\u00f3n registrado.",
+      "score": 0.9
+    },
+    {
+      "section": "Ongoing Monitoring",
+      "requirement": "Plan de re-validaci\u00f3n peri\u00f3dica definido",
+      "status": "partial",
+      "evidence": "Frecuencia semi-anual definida en model_registry.yaml. Trigger autom\u00e1tico si PSI > 0.20 o exceedances > 4.",
+      "score": 0.7
+    },
+    {
+      "section": "Outcomes Analysis",
+      "requirement": "Backtesting Kupiec \u2014 proporci\u00f3n de exceedances correcta",
+      "status": "pass",
+      "evidence": "p-value = 0.742 (PASS). Exceedances: 2 en 250 d\u00edas.",
+      "score": 1.0
+    },
+    {
+      "section": "Outcomes Analysis",
+      "requirement": "Backtesting Christoffersen \u2014 independencia de exceedances",
+      "status": "pass",
+      "evidence": "Test de independencia: PASS. Clustering de exceedances implicar\u00eda subestimaci\u00f3n en crisis.",
+      "score": 1.0
+    },
+    {
+      "section": "Outcomes Analysis",
+      "requirement": "Traffic light Basel III \u2014 zona verde",
+      "status": "pass",
+      "evidence": "Zona GREEN (2 exceedances en 250 d\u00edas). Verde: 0-4 | Amarillo: 5-9 | Rojo: 10+",
+      "score": 1.0
+    },
+    {
+      "section": "Outcomes Analysis",
+      "requirement": "Stress testing \u2014 cobertura de escenarios adversos",
+      "status": "pass",
+      "evidence": "Escenarios ejecutados: 7 (GFC 2008, COVID 2020, DFAST Adverse, LATAM tail). Reporte en reports/stress_scenarios/.",
+      "score": 1.0
+    }
+  ],
+  "limitations": [
+    "Modelo entrenado en datos 2000-2024 \u2014 no captura reg\u00edmenes previos",
+    "Portfolio asumido igual ponderado \u2014 no refleja posiciones reales",
+    "VaR 1-day asume liquidez perfecta \u2014 no aplicable a activos il\u00edquidos",
+    "Correlaciones asumidas estables \u2014 pueden cambiar en crisis (correlation breakdown)"
+  ],
+  "recommendations": [
+    "[Ongoing Monitoring] Plan de re-validaci\u00f3n peri\u00f3dica definido: Frecuencia semi-anual definida en model_registry.yaml. Trigger autom\u00e1tico si PSI > 0.20 o exceedances > 4."
+  ]
+}
