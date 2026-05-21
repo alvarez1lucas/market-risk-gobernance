@@ -154,7 +154,7 @@ TX = {
  "re_dist":"Distribución de regímenes","re_trans":"Matriz de transición",
  "re_var":"VaR: incondicional vs ajustado al régimen","re_improve":"Mejora en exceedances",
  "se_title":"Sentimiento NLP (FinBERT)",
- "se_sub":"NB 08 — sentimiento de noticias financieras (RSS + GDELT) como feature anticipada del TFT",
+ "se_sub":"NB 08 — sentimiento de noticias financieras (RSS + GDELT) as feature anticipada del TFT",
  "se_score":"Score de sentimiento diario","se_extreme":"Días de sentimiento extremo negativo",
  "se_corr":"Correlación predictiva (sentimiento t-1 → retorno t)",
  "se_impact":"Impacto en VaR: normal vs sentimiento extremo","se_method":"Método de scoring",
@@ -333,7 +333,7 @@ def page_market_data():
     
     fig.update_layout(**LAYOUT)
     fig.update_layout(height=500,showlegend=False)
-    st.plotly_chart(_aplicar_colores_negros(fig),use_container_width=True)
+    st.plotly_chart(fig,use_container_width=True)
 
     col_l,col_r = st.columns(2)
     with col_l:
@@ -351,7 +351,7 @@ def page_market_data():
                                   line=dict(color="#06d6a0",width=2)))
         fig2.update_layout(**LAYOUT)
         fig2.update_layout(height=300,legend=dict(orientation="h",y=1.1))
-        st.plotly_chart(_aplicar_colores_negros(fig2),use_container_width=True)
+        st.plotly_chart(fig2,use_container_width=True)
 
     with col_r:
         st.subheader(t("md_stats"))
@@ -387,7 +387,7 @@ def page_market_data():
             text=[len(v) for v in cats.values()],textposition="outside"))
         fig3.update_layout(**LAYOUT)
         fig3.update_layout(height=250)
-        st.plotly_chart(_aplicar_colores_negros(fig3),use_container_width=True)
+        st.plotly_chart(fig3,use_container_width=True)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PAGE 2 — Models
@@ -427,7 +427,7 @@ def page_models():
                       annotation_text=f"Best epoch: {best}")
         fig.update_layout(**LAYOUT)
         fig.update_layout(height=300,yaxis_type="log",legend=dict(orientation="h",y=1.1))
-        st.plotly_chart(_aplicar_colores_negros(fig),use_container_width=True)
+        st.plotly_chart(fig,use_container_width=True)
 
     with col_r:
         st.subheader(t("mo_importance"))
@@ -444,7 +444,7 @@ def page_models():
             opacity=0.85))
         fig2.update_layout(margin=dict(t=15,b=15,l=130,r=15), **LAYOUT)
         fig2.update_layout(height=300)
-        st.plotly_chart(_aplicar_colores_negros(fig2),use_container_width=True)
+        st.plotly_chart(fig2,use_container_width=True)
 
     st.subheader(t("mo_arch"))
     c1,c2,c3 = st.columns(3)
@@ -532,7 +532,7 @@ def page_backtesting():
                                      name=f"Exc ({exc_m.sum()})"))
         fig.update_layout(**LAYOUT)
         fig.update_layout(height=340,legend=dict(orientation="h",y=1.1))
-        st.plotly_chart(_aplicar_colores_negros(fig),use_container_width=True)
+        st.plotly_chart(fig,use_container_width=True)
 
     with col_r:
         st.subheader(t("bt_binom"))
@@ -547,7 +547,7 @@ def page_backtesting():
                        annotation_text=f"n={n_exc}")
         fig2.update_layout(xaxis_title="Exceedances",yaxis_title="%", **LAYOUT)
         fig2.update_layout(height=270)
-        st.plotly_chart(_aplicar_colores_negros(fig2),use_container_width=True)
+        st.plotly_chart(fig2,use_container_width=True)
         for lb,col_str in [(t("zone_g"),"green"),(t("zone_y"),"darkorange"),(t("zone_r"),"red")]:
             st.markdown(f"<span style='color:{col_str}'>●</span> {lb}",unsafe_allow_html=True)
 
@@ -578,7 +578,7 @@ def page_stress():
                                text=[f"{v:.4f}" for v in es_vals],textposition="outside"))
         fig.update_layout(yaxis_title="ES 97.5% (1-day)", **LAYOUT)
         fig.update_layout(height=300,xaxis_tickangle=-30)
-        st.plotly_chart(_aplicar_colores_negros(fig),use_container_width=True)
+        st.plotly_chart(fig,use_container_width=True)
 
     with col_r:
         st.subheader(t("st_shocks"))
@@ -591,7 +591,7 @@ def page_stress():
                               marker_color="#4361ee",opacity=0.8))
         fig2.update_layout(barmode="group",legend=dict(orientation="h",y=1.1), **LAYOUT)
         fig2.update_layout(height=300,xaxis_tickangle=-30)
-        st.plotly_chart(_aplicar_colores_negros(fig2),use_container_width=True)
+        st.plotly_chart(fig2,use_container_width=True)
 
     st.subheader(t("st_mc"))
     np.random.seed(42)
@@ -608,7 +608,7 @@ def page_stress():
                        annotation_text=f"{lb}:{v:.4f}",annotation_position="top right")
     fig3.update_layout(xaxis_title="P&L", **LAYOUT)
     fig3.update_layout(height=270)
-    st.plotly_chart(_aplicar_colores_negros(fig3),use_container_width=True)
+    st.plotly_chart(fig3,use_container_width=True)
     c1,c2,c3 = st.columns(3)
     c1.metric("VaR 99%",   f"{np.percentile(pnl,1):.5f}")
     c2.metric("ES 97.5%",  f"{pnl[pnl<=np.percentile(pnl,2.5)].mean():.5f}")
@@ -664,7 +664,7 @@ def page_regime():
                                  line=dict(color="#ef476f",dash="dash",width=1.8)))
         fig.update_layout(**LAYOUT)
         fig.update_layout(height=310,legend=dict(orientation="h",y=1.1))
-        st.plotly_chart(_aplicar_colores_negros(fig),use_container_width=True)
+        st.plotly_chart(fig,use_container_width=True)
         exc_b = (ret250.values<vbase).sum()
         exc_r = (ret250.values<vreg.values).sum()
         st.info(f"{t('re_improve')}: **{exc_b} → {exc_r}** exceedances "
@@ -677,7 +677,7 @@ def page_regime():
                                 marker_colors=[d[2] for d in dist],hole=0.45,textinfo="label+percent"))
         fig2.update_layout(**LAYOUT)
         fig2.update_layout(height=230,showlegend=False)
-        st.plotly_chart(_aplicar_colores_negros(fig2),use_container_width=True)
+        st.plotly_chart(fig2,use_container_width=True)
 
         st.subheader(t("re_trans"))
         trans = hmm.get("hmm_transmat",
@@ -727,7 +727,7 @@ def page_sentiment():
                       line_color="#ef476f",annotation_text="Extreme neg. threshold")
         fig.update_layout(**LAYOUT)
         fig.update_layout(height=300,legend=dict(orientation="h",y=1.1))
-        st.plotly_chart(_aplicar_colores_negros(fig),use_container_width=True)
+        st.plotly_chart(fig,use_container_width=True)
 
     with col_r:
         st.subheader(t("se_impact"))
@@ -743,7 +743,7 @@ def page_sentiment():
                                 text=[f"{v:.4f}" for v in [v_nrm,v_ext]],textposition="outside"))
         fig2.update_layout(yaxis_title="VaR 99% |abs|", **LAYOUT)
         fig2.update_layout(height=240)
-        st.plotly_chart(_aplicar_colores_negros(fig2),use_container_width=True)
+        st.plotly_chart(fig2,use_container_width=True)
         ratio = v_ext/v_nrm if v_nrm>0 else 1
         st.metric("VaR ratio",f"{ratio:.2f}×",f"+{(ratio-1):.0%}")
 
@@ -761,7 +761,7 @@ def page_sentiment():
         fig3.add_hline(y=0,line_color="black",line_width=0.8)
         fig3.update_layout(yaxis_title="Rolling 63d corr", **LAYOUT)
         fig3.update_layout(height=200)
-        st.plotly_chart(_aplicar_colores_negros(fig3),use_container_width=True)
+        st.plotly_chart(fig3,use_container_width=True)
         ca,cb = st.columns(2)
         ca.metric("Pearson r",f"{r_v:.4f}")
         cb.metric("p-value",f"{p_v:.4f}","✅ Significant" if p_v<0.05 else "⚠️ Not significant")
@@ -809,7 +809,7 @@ def page_conformal():
         fig.add_vline(x=0,line_color="black",line_width=0.8)
         fig.update_layout(xaxis_title="score = return − VaR_predicted", **LAYOUT)
         fig.update_layout(height=280)
-        st.plotly_chart(_aplicar_colores_negros(fig),use_container_width=True)
+        st.plotly_chart(fig,use_container_width=True)
 
     with col_r:
         st.subheader(t("cp_compare"))
@@ -821,7 +821,7 @@ def page_conformal():
                        annotation_text="Basel III green zone limit")
         fig2.update_layout(yaxis_title="N exceedances", showlegend=False, **LAYOUT)
         fig2.update_layout(height=260)
-        st.plotly_chart(_aplicar_colores_negros(fig2),use_container_width=True)
+        st.plotly_chart(fig2,use_container_width=True)
         for lb,cov,exc in [(lb_cl,clas_c,clas_e),(lb_cp,conf_c,conf_e)]:
             ze = "🟢" if exc<=4 else "🟡" if exc<=9 else "🔴"
             st.markdown(f"{ze} **{lb}**: {cov:.2%} coverage · {exc} exc.")
@@ -843,7 +843,7 @@ def page_conformal():
                               line=dict(color="#ef476f",width=1.5)))
     fig3.update_layout(**LAYOUT)
     fig3.update_layout(height=270,legend=dict(orientation="h",y=1.1))
-    st.plotly_chart(_aplicar_colores_negros(fig3),use_container_width=True)
+    st.plotly_chart(fig3,use_container_width=True)
 
 # ─── Governance ───────────────────────────────────────────────────────────────
 def page_governance():
@@ -885,16 +885,16 @@ def page_governance():
     with c1:
         fig_g = go.Figure(go.Indicator(
             mode="gauge+number",value=score*100,
-            title={"text":t("go_score"),"font":{"size":13}},
-            number={"suffix":"%","font":{"size":20}},
-            gauge={"axis":{"range":[0,100]},
+            title={"text":t("go_score"),"font":{"size":13, "color":"black"}},
+            number={"suffix":"%","font":{"size":20, "color":"black"}},
+            gauge={"axis":{"range":[0,100], "tickfont":{"color":"black"}},
                    "bar":{"color":"#06d6a0" if score>=0.8 else "#ffd166" if score>=0.6 else "#ef476f"},
                    "steps":[{"range":[0,60],"color":"#fee2e2"},
                              {"range":[60,80],"color":"#fef3c7"},
                              {"range":[80,100],"color":"#d1fae5"}]}))
         fig_g.update_layout(margin=dict(t=40,b=10,l=10,r=10), **LAYOUT)
         fig_g.update_layout(height=200)
-        st.plotly_chart(_aplicar_colores_negros(fig_g),use_container_width=True)
+        st.plotly_chart(fig_g,use_container_width=True)
     with c2:
         st.metric(t("go_status"),f"{se} {sl}")
         st.metric("Model",sr.get("model_name","TFT v1.0"))
@@ -1034,7 +1034,7 @@ def page_audit():
         yaxis=dict(showgrid=False,showticklabels=False,zeroline=False,range=[-0.5,0.9]),
         margin=dict(t=10,b=10,l=10,r=10))
         
-    st.plotly_chart(_aplicar_colores_negros(fig),use_container_width=True)
+    st.plotly_chart(fig,use_container_width=True)
     st.caption(
         "Each block: timestamp + event + payload + prev_hash → SHA-256. "
         "Any modification breaks the chain and is detectable." if st.session_state.lang=="en" else
@@ -1054,56 +1054,5 @@ ROUTER = {
     pages[7]: page_governance,
     pages[8]: page_audit,
 }
-
-# ── DEPURADOR INYECTADO AL FINAL ──────────────────────────────────────────────
-def _aplicar_colores_negros(fig):
-    """
-    Fuerza a que todos los textos sean negros y remueve activamente 
-    cualquier etiqueta residual o autogenerada con el valor 'undefined'.
-    """
-    # 1. Configuración de colores globales
-    fig.update_layout(
-        font=dict(color="black"),
-        title_font=dict(color="black"),
-        legend=dict(font=dict(color="black"))
-    )
-    
-    # 2. Reemplazo y limpieza en Ejes de Coordenadas
-    axis_keys = ['xaxis', 'yaxis'] + [f'xaxis{i}' for i in range(2, 10)] + [f'yaxis{i}' for i in range(2, 10)]
-    for key in axis_keys:
-        if hasattr(fig.layout, key) and getattr(fig.layout, key) is not None:
-            axis = getattr(fig.layout, key)
-            # Limpieza de títulos de ejes
-            if 'title' in axis and axis['title'] is not None:
-                if (isinstance(axis['title'], dict) and axis['title'].get('text') == 'undefined') or axis['title'] == 'undefined':
-                    axis['title'] = None
-            # Asegurar color de fuentes en etiquetas
-            axis['tickfont'] = dict(color="black")
-            if isinstance(axis.get('title'), dict):
-                axis['title']['font'] = dict(color="black")
-
-    # 3. Limpieza de Anotaciones de Subplots y Textos huérfanos
-    if fig.layout.annotations:
-        filtered_annotations = []
-        for ann in fig.layout.annotations:
-            if ann.text == 'undefined' or ann.text is None:
-                continue  # Excluir anotación indeseada
-            ann.font = dict(color="black")
-            filtered_annotations.append(ann)
-        fig.layout.annotations = filtered_annotations
-
-    # 4. Caso especial para gráficos de Indicadores / Gauges (Pestaña Gobernanza)
-    if hasattr(fig, "data"):
-        for trace in fig.data:
-            if trace.type == "indicator":
-                if hasattr(trace, "title") and trace.title and hasattr(trace.title, "text"):
-                    if trace.title.text == "undefined": trace.title.text = None
-                    else: trace.title.font = dict(color="black")
-                if hasattr(trace, "number") and trace.number:
-                    trace.number.font = dict(color="black")
-                if hasattr(trace, "gauge") and trace.gauge and trace.gauge.axis:
-                    trace.gauge.axis.tickfont = dict(color="black")
-                    
-    return fig
 
 ROUTER.get(page, page_market_data)()
