@@ -40,7 +40,7 @@ st.set_page_config(
 st.markdown("""
 <style>
 [data-testid="stMetricValue"]{ font-size:1.1rem; }
-.sub{ color:#000000; font-size:.83rem; margin-top:-10px; margin-bottom:10px; }
+.sub{ color:#64748b; font-size:.83rem; margin-top:-10px; margin-bottom:10px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -185,6 +185,15 @@ if "lang" not in st.session_state:
 def t(k):
     return TX[st.session_state.lang].get(k, TX["en"].get(k, k))
 
+# ── Layout Dict ───────────────────────────────────────────────────────────────
+LAYOUT = dict(
+    paper_bgcolor="white", plot_bgcolor="#f8fafc",
+    margin=dict(t=15,b=15,l=15,r=15),
+    font=dict(color="#64748b"),
+    xaxis=dict(showgrid=True,gridcolor="#e2e8f0",linecolor="#cbd5e1"),
+    yaxis=dict(showgrid=True,gridcolor="#e2e8f0",linecolor="#cbd5e1"),
+)
+
 # ── Loaders ───────────────────────────────────────────────────────────────────
 @st.cache_data(ttl=300)
 def load_json(p):
@@ -229,24 +238,6 @@ def synth_sentiment(n=1260):
         "n_articles": np.random.poisson(45,n),
     }, index=dates)
 
-# CONFIGURACIÓN GENERAL DE COLOR DE LETRA (TODOS LOS TEXTOS EN NEGRO SÓLIDO)
-LAYOUT = dict(
-    paper_bgcolor="white", 
-    plot_bgcolor="#f8fafc",
-    margin=dict(t=15,b=15,l=15,r=15),
-    font=dict(color="black"),
-    title_font=dict(color="black"),
-    xaxis=dict(
-        title_font=dict(color="black"),
-        tickfont=dict(color="black")
-    ),
-    yaxis=dict(
-        title_font=dict(color="black"),
-        tickfont=dict(color="black")
-    ),
-    legend=dict(font=dict(color="black"))
-)
-
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     c1,c2 = st.columns(2)
@@ -275,13 +266,6 @@ with st.sidebar:
     st.markdown(f"📊 Score: **{score:.0%}**")
     st.divider()
     st.caption("Market Risk DL Suite v1.0 · 2025")
-
-# ── Proxy / Helper para inyectar fuentes negras en subplots individuales
-def aplicar_estilos_ejes(fig):
-    fig.update_annotations(font=dict(color="black"))
-    fig.update_xaxes(title_font=dict(color="black"), tickfont=dict(color="black"))
-    fig.update_yaxes(title_font=dict(color="black"), tickfont=dict(color="black"))
-    return fig
 
 # ── Next Helpers ──
 def kpi_bar():
@@ -348,8 +332,7 @@ def page_market_data():
                              line=dict(color="#f72585",width=1),
                              fillcolor="rgba(247,37,133,0.12)",name="vol"),row=3,col=1)
     fig.update_layout(height=500,showlegend=False,**LAYOUT)
-    aplicar_estilos_ejes(fig)
-    st.plotly_chart(fig,use_container_width=True)
+    st.plotly_chart(_aplicar_colores_negros(fig),use_container_width=True)
 
     col_l,col_r = st.columns(2)
     with col_l:
@@ -366,8 +349,7 @@ def page_market_data():
                                   name=f"t-Student (df={df_t:.1f})",
                                   line=dict(color="#06d6a0",width=2)))
         fig2.update_layout(height=300,legend=dict(orientation="h",y=1.1),**LAYOUT)
-        aplicar_estilos_ejes(fig2)
-        st.plotly_chart(fig2,use_container_width=True)
+        st.plotly_chart(_aplicar_colores_negros(fig2),use_container_width=True)
 
     with col_r:
         st.subheader(t("md_stats"))
@@ -400,10 +382,9 @@ def page_market_data():
         fig3 = go.Figure(go.Bar(
             x=list(cats.keys()),y=[len(v) for v in cats.values()],
             marker_color=["#4361ee","#f72585","#7209b7","#ef476f","#06d6a0","#ffd166","#adb5bd"],
-            text=[len(v) for v in cats.values()],textposition="outside",textfont=dict(color="black")))
+            text=[len(v) for v in cats.values()],textposition="outside"))
         fig3.update_layout(height=250,**LAYOUT)
-        aplicar_estilos_ejes(fig3)
-        st.plotly_chart(fig3,use_container_width=True)
+        st.plotly_chart(_aplicar_colores_negros(fig3),use_container_width=True)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PAGE 2 — Models
@@ -440,11 +421,10 @@ def page_models():
         fig.add_trace(go.Scatter(x=ep,y=tl,name="Train",line=dict(color="#4361ee",width=1.5)))
         fig.add_trace(go.Scatter(x=ep,y=vl,name="Val",  line=dict(color="#ef476f",width=1.5)))
         fig.add_vline(x=best,line_dash="dash",line_color="green",
-                      annotation_text=f"Best epoch: {best}", annotation_font=dict(color="black"))
+                      annotation_text=f"Best epoch: {best}")
         fig.update_layout(height=300,yaxis_type="log",
                           legend=dict(orientation="h",y=1.1),**LAYOUT)
-        aplicar_estilos_ejes(fig)
-        st.plotly_chart(fig,use_container_width=True)
+        st.plotly_chart(_aplicar_colores_negros(fig),use_container_width=True)
 
     with col_r:
         st.subheader(t("mo_importance"))
@@ -460,8 +440,7 @@ def page_models():
             marker_color=["#ef476f" if v>imp.quantile(0.75) else "#4361ee" for v in imp],
             opacity=0.85))
         fig2.update_layout(height=300,**LAYOUT,margin=dict(t=15,b=15,l=130,r=15))
-        aplicar_estilos_ejes(fig2)
-        st.plotly_chart(fig2,use_container_width=True)
+        st.plotly_chart(_aplicar_colores_negros(fig2),use_container_width=True)
 
     st.subheader(t("mo_arch"))
     c1,c2,c3 = st.columns(3)
@@ -548,8 +527,7 @@ def page_backtesting():
                                      mode="markers",marker=dict(color="red",size=7,symbol="x"),
                                      name=f"Exc ({exc_m.sum()})"))
         fig.update_layout(height=340,legend=dict(orientation="h",y=1.1),**LAYOUT)
-        aplicar_estilos_ejes(fig)
-        st.plotly_chart(fig,use_container_width=True)
+        st.plotly_chart(_aplicar_colores_negros(fig),use_container_width=True)
 
     with col_r:
         st.subheader(t("bt_binom"))
@@ -559,12 +537,11 @@ def page_backtesting():
         fig2 = go.Figure(go.Bar(
             x=xs,y=ps*100,marker_color=bc,opacity=0.85,
             text=[f"{p*100:.1f}%" if p>0.005 else "" for p in ps],
-            textposition="outside",textfont=dict(size=9, color="black")))
+            textposition="outside"))
         fig2.add_vline(x=n_exc,line_dash="dash",line_color="#073b4c",line_width=2.5,
-                       annotation_text=f"n={n_exc}", annotation_font=dict(color="black"))
+                       annotation_text=f"n={n_exc}")
         fig2.update_layout(height=270,xaxis_title="Exceedances",yaxis_title="%",**LAYOUT)
-        aplicar_estilos_ejes(fig2)
-        st.plotly_chart(fig2,use_container_width=True)
+        st.plotly_chart(_aplicar_colores_negros(fig2),use_container_width=True)
         for lb,col_str in [(t("zone_g"),"green"),(t("zone_y"),"darkorange"),(t("zone_r"),"red")]:
             st.markdown(f"<span style='color:{col_str}'>●</span> {lb}",unsafe_allow_html=True)
 
@@ -594,10 +571,9 @@ def page_stress():
     with col_l:
         st.subheader(t("st_es"))
         fig = go.Figure(go.Bar(x=names,y=es_vals,marker_color=colors,opacity=0.85,
-                               text=[f"{v:.4f}" for v in es_vals],textposition="outside",textfont=dict(color="black")))
+                               text=[f"{v:.4f}" for v in es_vals],textposition="outside"))
         fig.update_layout(height=300,xaxis_tickangle=-30,yaxis_title="ES 97.5% (1-day)",**LAYOUT)
-        aplicar_estilos_ejes(fig)
-        st.plotly_chart(fig,use_container_width=True)
+        st.plotly_chart(_aplicar_colores_negros(fig),use_container_width=True)
 
     with col_r:
         st.subheader(t("st_shocks"))
@@ -610,8 +586,7 @@ def page_stress():
                               marker_color="#4361ee",opacity=0.8))
         fig2.update_layout(height=300,barmode="group",xaxis_tickangle=-30,
                            legend=dict(orientation="h",y=1.1),**LAYOUT)
-        aplicar_estilos_ejes(fig2)
-        st.plotly_chart(fig2,use_container_width=True)
+        st.plotly_chart(_aplicar_colores_negros(fig2),use_container_width=True)
 
     st.subheader(t("st_mc"))
     np.random.seed(42)
@@ -625,10 +600,9 @@ def page_stress():
     for lb,pct in [("VaR 99.5%",0.5),("VaR 99%",1.0),("VaR 97.5%",2.5)]:
         v = np.percentile(pnl,pct)
         fig3.add_vline(x=v,line_dash="dash",line_width=1.5,
-                       annotation_text=f"{lb}:{v:.4f}",annotation_position="top right", annotation_font=dict(color="black"))
+                       annotation_text=f"{lb}:{v:.4f}",annotation_position="top right")
     fig3.update_layout(height=270,xaxis_title="P&L",**LAYOUT)
-    aplicar_estilos_ejes(fig3)
-    st.plotly_chart(fig3,use_container_width=True)
+    st.plotly_chart(_aplicar_colores_negros(fig3),use_container_width=True)
     c1,c2,c3 = st.columns(3)
     c1.metric("VaR 99%",   f"{np.percentile(pnl,1):.5f}")
     c2.metric("ES 97.5%",  f"{pnl[pnl<=np.percentile(pnl,2.5)].mean():.5f}")
@@ -685,8 +659,7 @@ def page_regime():
                                  name="VaR regime-adjusted",
                                  line=dict(color="#ef476f",dash="dash",width=1.8)))
         fig.update_layout(height=310,legend=dict(orientation="h",y=1.1),**LAYOUT)
-        aplicar_estilos_ejes(fig)
-        st.plotly_chart(fig,use_container_width=True)
+        st.plotly_chart(_aplicar_colores_negros(fig),use_container_width=True)
         exc_b = (ret250.values<vbase).sum()
         exc_r = (ret250.values<vreg.values).sum()
         st.info(f"{t('re_improve')}: **{exc_b} → {exc_r}** exceedances "
@@ -695,13 +668,10 @@ def page_regime():
     with col_r:
         st.subheader(t("re_dist"))
         dist = [(RN[st.session_state.lang][i],(rs==i).sum(),RC[i]) for i in range(4)]
-        fig2 = go.Figure(go.Pie(
-            labels=[d[0] for d in dist],values=[d[1] for d in dist],
-            marker_colors=[d[2] for d in dist],hole=0.45,textinfo="label+percent",
-            textfont=dict(color="black")))
-        fig2.update_layout(height=230,showlegend=False,paper_bgcolor="white",
-                           margin=dict(t=10,b=10,l=10,r=10), font=dict(color="black"))
-        st.plotly_chart(fig2,use_container_width=True)
+        fig2 = go.Figure(go.Pie(labels=[d[0] for d in dist],values=[d[1] for d in dist],
+                                marker_colors=[d[2] for d in dist],hole=0.45,textinfo="label+percent"))
+        fig2.update_layout(height=230,showlegend=False,**LAYOUT)
+        st.plotly_chart(_aplicar_colores_negros(fig2),use_container_width=True)
 
         st.subheader(t("re_trans"))
         trans = hmm.get("hmm_transmat",
@@ -750,11 +720,10 @@ def page_sentiment():
                                      line=dict(color="#ef476f",width=1.5,dash="dash"),name="MA21d"))
         fig.add_hline(y=0,line_color="black",line_width=0.8)
         fig.add_hline(y=sent["sentiment_mean"].quantile(0.10),line_dash="dot",
-                      line_color="#ef476f",annotation_text="Extreme neg. threshold", annotation_font=dict(color="black"))
+                      line_color="#ef476f",annotation_text="Extreme neg. threshold")
         fig.update_layout(height=300,yaxis=dict(range=[-1,1]),
                           legend=dict(orientation="h",y=1.1),**LAYOUT)
-        aplicar_estilos_ejes(fig)
-        st.plotly_chart(fig,use_container_width=True)
+        st.plotly_chart(_aplicar_colores_negros(fig),use_container_width=True)
 
     with col_r:
         st.subheader(t("se_impact"))
@@ -767,11 +736,9 @@ def page_sentiment():
         lb_n = "Normal"; lb_e = "Extreme neg." if st.session_state.lang=="en" else "Sent. extremo"
         fig2 = go.Figure(go.Bar(x=[lb_n,lb_e],y=[v_nrm,v_ext],
                                 marker_color=["#06d6a0","#ef476f"],opacity=0.85,
-                                text=[f"{v:.4f}" for v in [v_nrm,v_ext]],
-                                textposition="outside",textfont=dict(color="black")))
+                                text=[f"{v:.4f}" for v in [v_nrm,v_ext]],textposition="outside"))
         fig2.update_layout(height=240,yaxis_title="VaR 99% |abs|",**LAYOUT)
-        aplicar_estilos_ejes(fig2)
-        st.plotly_chart(fig2,use_container_width=True)
+        st.plotly_chart(_aplicar_colores_negros(fig2),use_container_width=True)
         ratio = v_ext/v_nrm if v_nrm>0 else 1
         st.metric("VaR ratio",f"{ratio:.2f}×",f"+{(ratio-1):.0%}")
 
@@ -788,8 +755,7 @@ def page_sentiment():
                                   fillcolor="rgba(114,9,183,0.12)"))
         fig3.add_hline(y=0,line_color="black",line_width=0.8)
         fig3.update_layout(height=200,yaxis_title="Rolling 63d corr",**LAYOUT)
-        aplicar_estilos_ejes(fig3)
-        st.plotly_chart(fig3,use_container_width=True)
+        st.plotly_chart(_aplicar_colores_negros(fig3),use_container_width=True)
         ca,cb = st.columns(2)
         ca.metric("Pearson r",f"{r_v:.4f}")
         cb.metric("p-value",f"{p_v:.4f}","✅ Significant" if p_v<0.05 else "⚠️ Not significant")
@@ -835,23 +801,21 @@ def page_conformal():
         fig = go.Figure()
         fig.add_trace(go.Histogram(x=scores,nbinsx=40,marker_color="#4361ee",opacity=0.7))
         fig.add_vline(x=q_v,line_dash="dash",line_color="#ef476f",line_width=2.5,
-                      annotation_text=f"Q₉₉%={q_v:.4f}",annotation_position="top right", annotation_font=dict(color="black"))
+                      annotation_text=f"Q₉₉%={q_v:.4f}",annotation_position="top right")
         fig.add_vline(x=0,line_color="black",line_width=0.8)
         fig.update_layout(height=280,xaxis_title="score = return − VaR_predicted",**LAYOUT)
-        aplicar_estilos_ejes(fig)
-        st.plotly_chart(fig,use_container_width=True)
+        st.plotly_chart(_aplicar_colores_negros(fig),use_container_width=True)
 
     with col_r:
         st.subheader(t("cp_compare"))
         lb_cl = t("cp_exc_cl"); lb_cp = t("cp_exc_cp")
         fig2 = go.Figure(go.Bar(x=[lb_cl,lb_cp],y=[clas_e,conf_e],
                                 marker_color=["#adb5bd","#4361ee"],opacity=0.85,
-                                text=[clas_e,conf_e],textposition="outside",textfont=dict(color="black")))
+                                text=[clas_e,conf_e],textposition="outside"))
         fig2.add_hline(y=4,line_dash="dash",line_color="green",line_width=1.5,
-                       annotation_text="Basel III green zone limit", annotation_font=dict(color="black"))
+                       annotation_text="Basel III green zone limit")
         fig2.update_layout(height=260,yaxis_title="N exceedances",showlegend=False,**LAYOUT)
-        aplicar_estilos_ejes(fig2)
-        st.plotly_chart(fig2,use_container_width=True)
+        st.plotly_chart(_aplicar_colores_negros(fig2),use_container_width=True)
         for lb,cov,exc in [(lb_cl,clas_c,clas_e),(lb_cp,conf_c,conf_e)]:
             ze = "🟢" if exc<=4 else "🟡" if exc<=9 else "🔴"
             st.markdown(f"{ze} **{lb}**: {cov:.2%} coverage · {exc} exc.")
@@ -872,8 +836,7 @@ def page_conformal():
     fig3.add_trace(go.Scatter(x=ret.index,y=v_ad_s,name="Conformal adaptive",
                               line=dict(color="#ef476f",width=1.5)))
     fig3.update_layout(height=270,legend=dict(orientation="h",y=1.1),**LAYOUT)
-    aplicar_estilos_ejes(fig3)
-    st.plotly_chart(fig3,use_container_width=True)
+    st.plotly_chart(_aplicar_colores_negros(fig3),use_container_width=True)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PAGE 8 — Governance
@@ -917,15 +880,15 @@ def page_governance():
     with c1:
         fig_g = go.Figure(go.Indicator(
             mode="gauge+number",value=score*100,
-            title={"text":t("go_score"),"font":{"size":13, "color": "black"}},
-            number={"suffix":"%","font":{"size":20, "color": "black"}},
-            gauge={"axis":{"range":[0,100], "tickfont": dict(color="black")},
+            title={"text":t("go_score"),"font":{"size":13}},
+            number={"suffix":"%","font":{"size":20}},
+            gauge={"axis":{"range":[0,100]},
                    "bar":{"color":"#06d6a0" if score>=0.8 else "#ffd166" if score>=0.6 else "#ef476f"},
                    "steps":[{"range":[0,60],"color":"#fee2e2"},
                              {"range":[60,80],"color":"#fef3c7"},
                              {"range":[80,100],"color":"#d1fae5"}]}))
-        fig_g.update_layout(height=200,margin=dict(t=40,b=10,l=10,r=10), font=dict(color="black"))
-        st.plotly_chart(fig_g,use_container_width=True)
+        fig_g.update_layout(height=200,margin=dict(t=40,b=10,l=10,r=10),**LAYOUT)
+        st.plotly_chart(_aplicar_colores_negros(fig_g),use_container_width=True)
     with c2:
         st.metric(t("go_status"),f"{se} {sl}")
         st.metric("Model",sr.get("model_name","TFT v1.0"))
@@ -957,7 +920,7 @@ def page_governance():
                     f'padding:6px 10px;border-radius:6px;margin:3px 0;font-size:13px">'
                     f'{SEMO.get(c.get("status",""),"?")} <b>[{c.get("score",0):.0%}]</b> '
                     f'{c.get("requirement","")}'
-                    f'<br><span style="color:#000000;font-size:11px">{c.get("evidence","")}</span></div>',
+                    f'<br><span style="color:#64748b;font-size:11px">{c.get("evidence","")}</span></div>',
                     unsafe_allow_html=True)
             st.markdown("")
 
@@ -1059,13 +1022,13 @@ def page_audit():
                                     dash="dot" if not ok else "solid"))
             fig.add_annotation(x=i-0.5,y=0.35,
                                text=f"hash:{e.get('previous_hash','')[:6]}...",
-                               showarrow=False,font=dict(size=8,color="black"))
+                               showarrow=False,font=dict(size=8,color="#64748b"))
     fig.update_layout(
         height=210,showlegend=False,paper_bgcolor="white",plot_bgcolor="white",
         xaxis=dict(showgrid=False,showticklabels=False,zeroline=False),
         yaxis=dict(showgrid=False,showticklabels=False,zeroline=False,range=[-0.5,0.9]),
         margin=dict(t=10,b=10,l=10,r=10))
-    st.plotly_chart(fig,use_container_width=True)
+    st.plotly_chart(_aplicar_colores_negros(fig),use_container_width=True)
     st.caption(
         "Each block: timestamp + event + payload + prev_hash → SHA-256. "
         "Any modification breaks the chain and is detectable." if st.session_state.lang=="en" else
@@ -1085,4 +1048,26 @@ ROUTER = {
     pages[7]: page_governance,
     pages[8]: page_audit,
 }
+
+# ── ÚNICO HELPER INYECTADO AL FINAL PARA PREVENIR ERRORES DE LÓGICA ───────────
+def _aplicar_colores_negros(fig):
+    """Fuerza a que todas las letras de los ejes, títulos y leyendas sean negras."""
+    fig.update_layout(
+        font=dict(color="black"),
+        title_font=dict(color="black"),
+        legend=dict(font=dict(color="black"))
+    )
+    fig.update_xaxes(title_font=dict(color="black"), tickfont=dict(color="black"))
+    fig.update_yaxes(title_font=dict(color="black"), tickfont=dict(color="black"))
+    fig.update_annotations(font=dict(color="black"))
+    # Casos especiales de componentes como indicadores (Pestaña Gobernanza)
+    if hasattr(fig, "data"):
+        for trace in fig.data:
+            if trace.type == "indicator":
+                if hasattr(trace, "title") and trace.title.font: trace.title.font.color = "black"
+                if hasattr(trace, "number") and trace.number.font: trace.number.font.color = "black"
+                if hasattr(trace, "gauge") and trace.gauge.axis and trace.gauge.axis.tickfont:
+                    trace.gauge.axis.tickfont.color = "black"
+    return fig
+
 ROUTER.get(page, page_market_data)()
