@@ -40,7 +40,7 @@ st.set_page_config(
 st.markdown("""
 <style>
 [data-testid="stMetricValue"]{ font-size:1.1rem; }
-.sub{ color:#6b7280; font-size:.83rem; margin-top:-10px; margin-bottom:10px; }
+.sub{ color:#000000; font-size:.83rem; margin-top:-10px; margin-bottom:10px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -230,7 +230,8 @@ def synth_sentiment(n=1260):
     }, index=dates)
 
 LAYOUT = dict(paper_bgcolor="white", plot_bgcolor="#f8fafc",
-              margin=dict(t=15,b=15,l=15,r=15))
+              margin=dict(t=15,b=15,l=15,r=15),
+              font=dict(color="black"))
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
@@ -917,7 +918,7 @@ def page_governance():
                     f'padding:6px 10px;border-radius:6px;margin:3px 0;font-size:13px">'
                     f'{SEMO.get(c.get("status",""),"?")} <b>[{c.get("score",0):.0%}]</b> '
                     f'{c.get("requirement","")}'
-                    f'<br><span style="color:#6b7280;font-size:11px">{c.get("evidence","")}</span></div>',
+                    f'<br><span style="color:#000000;font-size:11px">{c.get("evidence","")}</span></div>',
                     unsafe_allow_html=True)
             st.markdown("")
 
@@ -1019,7 +1020,7 @@ def page_audit():
                                     dash="dot" if not ok else "solid"))
             fig.add_annotation(x=i-0.5,y=0.35,
                                text=f"hash:{e.get('previous_hash','')[:6]}...",
-                               showarrow=False,font=dict(size=8,color="#6b7280"))
+                               showarrow=False,font=dict(size=8,color="black"))
     fig.update_layout(
         height=210,showlegend=False,paper_bgcolor="white",plot_bgcolor="white",
         xaxis=dict(showgrid=False,showticklabels=False,zeroline=False),
