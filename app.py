@@ -39,8 +39,10 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-[data-testid="stMetricValue"]{ font-size:1.1rem; }
-.sub{ color:#64748b; font-size:.83rem; margin-top:-10px; margin-bottom:10px; }
+[data-testid="stMetricValue"]{ font-size:1.1rem; color: black !important; }
+.sub{ color:#000000; font-size:.83rem; margin-top:-10px; margin-bottom:10px; font-weight: 500; }
+h1, h2, h3, h4, h5, h6, p, span, label { color: black !important; }
+div[data-testid="stMarkdownContainer"] p { color: black !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -185,12 +187,15 @@ if "lang" not in st.session_state:
 def t(k):
     return TX[st.session_state.lang].get(k, TX["en"].get(k, k))
 
-# ── Layout Dict Base ──────────────────────────────────────────────────────────
+# ── Layout Dict Base (Forzado estricto a Negro) ───────────────────────────────
 LAYOUT = dict(
-    paper_bgcolor="white", plot_bgcolor="#f8fafc",
-    font=dict(color="black"),
-    xaxis=dict(showgrid=True,gridcolor="#e2e8f0",linecolor="#cbd5e1"),
-    yaxis=dict(showgrid=True,gridcolor="#e2e8f0",linecolor="#cbd5e1"),
+    paper_bgcolor="white", 
+    plot_bgcolor="#f8fafc",
+    font=dict(color="black", size=11),
+    title=dict(font=dict(color="black", size=14)),
+    legend=dict(font=dict(color="black"), bgcolor="rgba(255,255,255,0.6)"),
+    xaxis=dict(showgrid=True, gridcolor="#e2e8f0", linecolor="#cbd5e1", titlefont=dict(color="black"), tickfont=dict(color="black")),
+    yaxis=dict(showgrid=True, gridcolor="#e2e8f0", linecolor="#cbd5e1", titlefont=dict(color="black"), tickfont=dict(color="black")),
 )
 
 # ── Loaders ───────────────────────────────────────────────────────────────────
@@ -320,42 +325,54 @@ def page_market_data():
     m3.metric(t("md_feats"),  len(features.columns) if not features.empty else "—")
     m4.metric(t("md_obs"),    f"{len(master):,}")
 
-    fig = make_subplots(rows=3,cols=1,shared_xaxes=True,
-                        subplot_titles=[t("md_prices"),t("md_returns"),t("md_vol")],
-                        row_heights=[0.4,0.35,0.25])
-    fig.add_trace(go.Scatter(x=spx.index,y=spx,line=dict(color="#4361ee",width=0.9),name="SPX"),row=1,col=1)
+    # make_subplots SIN subplot_titles para erradicar de raíz los "undefined"
+    fig = make_subplots(rows=3, cols=1, shared_xaxes=True, row_heights=[0.4, 0.35, 0.25])
+    
+    fig.add_trace(go.Scatter(x=spx.index, y=spx, line=dict(color="#4361ee", width=0.9), name="SPX"), row=1, col=1)
     cret = ["#06d6a0" if r>=0 else "#ef476f" for r in ret]
-    fig.add_trace(go.Bar(x=ret.index,y=ret,marker_color=cret,opacity=0.7,name="ret"),row=2,col=1)
+    fig.add_trace(go.Bar(x=ret.index, y=ret, marker_color=cret, opacity=0.7, name="ret"), row=2, col=1)
     v21 = ret.rolling(21).std()*np.sqrt(252)
-    fig.add_trace(go.Scatter(x=v21.index,y=v21,fill="tozeroy",
-                             line=dict(color="#f72585",width=1),
-                             fillcolor="rgba(247,37,133,0.12)",name="vol"),row=3,col=1)
+    fig.add_trace(go.Scatter(x=v21.index, y=v21, fill="tozeroy",
+                             line=dict(color="#f72585", width=1),
+                             fillcolor="rgba(247,37,133,0.12)", name="vol"), row=3, col=1)
     
     fig.update_layout(**LAYOUT)
-    fig.update_layout(height=500,showlegend=False)
-    st.plotly_chart(fig,use_container_width=True)
+    fig.update_layout(height=500, showlegend=False)
+    
+    # Añadimos los títulos manualmente controlados en negro
+    fig.add_annotation(text=t("md_prices"), xref="paper", yref="paper", x=0, y=1.02, showarrow=False, font=dict(color="black", size=12, weight="bold"))
+    fig.add_annotation(text=t("md_returns"), xref="paper", yref="paper", x=0, y=0.58, showarrow=False, font=dict(color="black", size=12, weight="bold"))
+    fig.add_annotation(text=t("md_vol"), xref="paper", yref="paper", x=0, y=0.22, showarrow=False, font=dict(color="black", size=12, weight="bold"))
+    
+    # Forzar negro en todos los ejes del grid
+    fig.update_xaxes(titlefont=dict(color="black"), tickfont=dict(color="black"), gridcolor="#e2e8f0", linecolor="#cbd5e1")
+    fig.update_yaxes(titlefont=dict(color="black"), tickfont=dict(color="black"), gridcolor="#e2e8f0", linecolor="#cbd5e1")
+    
+    st.plotly_chart(fig, use_container_width=True)
 
-    col_l,col_r = st.columns(2)
+    col_l, col_r = st.columns(2)
     with col_l:
         st.subheader(t("md_dist"))
         fig2 = go.Figure()
-        fig2.add_trace(go.Histogram(x=ret,nbinsx=100,histnorm="probability density",
-                                    marker_color="#4361ee",opacity=0.6,name="Observed"))
-        x = np.linspace(ret.min(),ret.max(),300)
-        mu,sig = ret.mean(),ret.std()
-        fig2.add_trace(go.Scatter(x=x,y=sc_stats.norm.pdf(x,mu,sig),
-                                  name="Normal",line=dict(color="#ef476f",dash="dash",width=2)))
-        df_t,loc_t,sc_t = sc_stats.t.fit(ret)
-        fig2.add_trace(go.Scatter(x=x,y=sc_stats.t.pdf(x,df_t,loc_t,sc_t),
+        fig2.add_trace(go.Histogram(x=ret, nbinsx=100, histnorm="probability density",
+                                    marker_color="#4361ee", opacity=0.6, name="Observed"))
+        x = np.linspace(ret.min(), ret.max(), 300)
+        mu, sig = ret.mean(), ret.std()
+        fig2.add_trace(go.Scatter(x=x, y=sc_stats.norm.pdf(x, mu, sig),
+                                  name="Normal", line=dict(color="#ef476f", dash="dash", width=2)))
+        df_t, loc_t, sc_t = sc_stats.t.fit(ret)
+        fig2.add_trace(go.Scatter(x=x, y=sc_stats.t.pdf(x, df_t, loc_t, sc_t),
                                   name=f"t-Student (df={df_t:.1f})",
-                                  line=dict(color="#06d6a0",width=2)))
+                                  line=dict(color="#06d6a0", width=2)))
         fig2.update_layout(**LAYOUT)
-        fig2.update_layout(height=300,legend=dict(orientation="h",y=1.1))
-        st.plotly_chart(fig2,use_container_width=True)
+        fig2.update_layout(height=300, legend=dict(orientation="h", y=1.1, font=dict(color="black")))
+        fig2.update_xaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+        fig2.update_yaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+        st.plotly_chart(fig2, use_container_width=True)
 
     with col_r:
         st.subheader(t("md_stats"))
-        jb_s,jb_p = jarque_bera(ret.dropna())
+        jb_s, jb_p = jarque_bera(ret.dropna())
         var99  = float(ret.quantile(0.01))
         es975  = float(ret[ret<=ret.quantile(0.025)].mean())
         lab = "Metric" if st.session_state.lang=="en" else "Métrica"
@@ -363,11 +380,11 @@ def page_market_data():
         df_st = pd.DataFrame({
             lab:["Excess kurtosis","Skewness","Vol annualized",
                  "VaR 99% (hist)","ES 97.5% (hist)","Jarque-Bera","t-Student df"],
-            val:[f"{ret.kurtosis():.3f}",f"{ret.skew():.3f}",
+            val:[f"{ret.kurtosis():.3f}", f"{ret.skew():.3f}",
                  f"{ret.std()*np.sqrt(252):.2%}",
-                 f"{var99:.4f}",f"{es975:.4f}",
-                 f"p={jb_p:.2e} → rejects normality",f"{df_t:.1f}"]})
-        st.dataframe(df_st,use_container_width=True,hide_index=True)
+                 f"{var99:.4f}", f"{es975:.4f}",
+                 f"p={jb_p:.2e} → rejects normality", f"{df_t:.1f}"]})
+        st.dataframe(df_st, use_container_width=True, hide_index=True)
 
     if not features.empty:
         st.subheader(t("md_feat_cat"))
@@ -382,19 +399,21 @@ def page_market_data():
         }
         cats = {k:v for k,v in cats.items() if v}
         fig3 = go.Figure(go.Bar(
-            x=list(cats.keys()),y=[len(v) for v in cats.values()],
+            x=list(cats.keys()), y=[len(v) for v in cats.values()],
             marker_color=["#4361ee","#f72585","#7209b7","#ef476f","#06d6a0","#ffd166","#adb5bd"],
-            text=[len(v) for v in cats.values()],textposition="outside"))
+            text=[len(v) for v in cats.values()], textposition="outside"))
         fig3.update_layout(**LAYOUT)
         fig3.update_layout(height=250)
-        st.plotly_chart(fig3,use_container_width=True)
+        fig3.update_xaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+        fig3.update_yaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+        st.plotly_chart(fig3, use_container_width=True)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PAGE 2 — Models
 # ══════════════════════════════════════════════════════════════════════════════
 def page_models():
     st.title(t("mo_title"))
-    st.markdown(f'<p class="sub">{t("mo_sub")}</p>',unsafe_allow_html=True)
+    st.markdown(f'<p class="sub">{t("mo_sub")}</p>', unsafe_allow_html=True)
     kpi_bar(); st.divider()
 
     st.subheader(t("mo_ablation"))
@@ -408,11 +427,11 @@ def page_models():
         "Params":    ["42K","68K","71K","89K","125K"],
     })
     st.dataframe(
-        df_abl.style.highlight_min(subset=["MAE","Q-Loss 1%"],color="#d1fae5")
-                    .highlight_max(subset=["Kupiec p"],color="#d1fae5"),
-        use_container_width=True,hide_index=True)
+        df_abl.style.highlight_min(subset=["MAE","Q-Loss 1%"], color="#d1fae5")
+                    .highlight_max(subset=["Kupiec p"], color="#d1fae5"),
+        use_container_width=True, hide_index=True)
 
-    col_l,col_r = st.columns(2)
+    col_l, col_r = st.columns(2)
     with col_l:
         st.subheader(t("mo_training"))
         np.random.seed(42)
@@ -421,13 +440,15 @@ def page_models():
         vl = (0.050*np.exp(-np.array(ep)/15)+0.010+np.random.normal(0,0.002,50)).tolist()
         best = int(np.argmin(vl))
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=ep,y=tl,name="Train",line=dict(color="#4361ee",width=1.5)))
-        fig.add_trace(go.Scatter(x=ep,y=vl,name="Val",  line=dict(color="#ef476f",width=1.5)))
-        fig.add_vline(x=best,line_dash="dash",line_color="green",
-                      annotation_text=f"Best epoch: {best}")
+        fig.add_trace(go.Scatter(x=ep, y=tl, name="Train", line=dict(color="#4361ee", width=1.5)))
+        fig.add_trace(go.Scatter(x=ep, y=vl, name="Val",  line=dict(color="#ef476f", width=1.5)))
+        fig.add_vline(x=best, line_dash="dash", line_color="green",
+                      annotation_text=f"Best epoch: {best}", annotation_font=dict(color="black"))
         fig.update_layout(**LAYOUT)
-        fig.update_layout(height=300,yaxis_type="log",legend=dict(orientation="h",y=1.1))
-        st.plotly_chart(fig,use_container_width=True)
+        fig.update_layout(height=300, yaxis_type="log", legend=dict(orientation="h", y=1.1, font=dict(color="black")))
+        fig.update_xaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+        fig.update_yaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+        st.plotly_chart(fig, use_container_width=True)
 
     with col_r:
         st.subheader(t("mo_importance"))
@@ -437,17 +458,19 @@ def page_models():
         np.random.seed(7)
         raw = np.random.dirichlet(np.ones(10)*1.5)
         raw[:3] *= 2.5; raw /= raw.sum()
-        imp = pd.Series(raw,index=fnames).sort_values()
+        imp = pd.Series(raw, index=fnames).sort_values()
         fig2 = go.Figure(go.Bar(
-            x=imp.values,y=imp.index,orientation="h",
+            x=imp.values, y=imp.index, orientation="h",
             marker_color=["#ef476f" if v>imp.quantile(0.75) else "#4361ee" for v in imp],
             opacity=0.85))
-        fig2.update_layout(margin=dict(t=15,b=15,l=130,r=15), **LAYOUT)
+        fig2.update_layout(margin=dict(t=15, b=15, l=130, r=15), **LAYOUT)
         fig2.update_layout(height=300)
-        st.plotly_chart(fig2,use_container_width=True)
+        fig2.update_xaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+        fig2.update_yaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+        st.plotly_chart(fig2, use_container_width=True)
 
     st.subheader(t("mo_arch"))
-    c1,c2,c3 = st.columns(3)
+    c1, c2, c3 = st.columns(3)
     with c1:
         st.markdown(f"### 🏆 {t('mo_champion')}: TFT")
         st.markdown("""
@@ -482,189 +505,201 @@ def page_models():
 # ══════════════════════════════════════════════════════════════════════════════
 def page_backtesting():
     st.title(t("bt_title"))
-    st.markdown(f'<p class="sub">{t("bt_sub")}</p>',unsafe_allow_html=True)
+    st.markdown(f'<p class="sub">{t("bt_sub")}</p>', unsafe_allow_html=True)
     kpi_bar(); st.divider()
 
     bt = load_json("reports/var_backtest.json") or {
-        "n_exceedances":3,"n_observations":250,"kupiec_pval":0.38,
-        "kupiec_pass":True,"christoffersen_pval":0.55,"christoffersen_pass":True,
-        "traffic_light_zone":"green","overall_status":"approved",
-        "exceedance_rate":0.012,"expected_rate":0.01}
+        "n_exceedances":3, "n_observations":250, "kupiec_pval":0.38,
+        "kupiec_pass":True, "christoffersen_pval":0.55, "christoffersen_pass":True,
+        "traffic_light_zone":"green", "overall_status":"approved",
+        "exceedance_rate":0.012, "expected_rate":0.01}
 
-    zone  = bt.get("traffic_light_zone","green")
-    n_exc = bt.get("n_exceedances",3)
-    kup_p = bt.get("kupiec_pval",0.38)
-    chr_p = bt.get("christoffersen_pval",0.55)
-    ze    = {"green":"🟢","yellow":"🟡","red":"🔴"}.get(zone,"⚪")
-    mc    = {"green":"3.0×","yellow":"3.5×","red":"4.0×"}.get(zone,"3.0×")
+    zone  = bt.get("traffic_light_zone", "green")
+    n_exc = bt.get("n_exceedances", 3)
+    kup_p = bt.get("kupiec_pval", 0.38)
+    chr_p = bt.get("christoffersen_pval", 0.55)
+    ze    = {"green":"🟢","yellow":"🟡","red":"🔴"}.get(zone, "⚪")
+    mc    = {"green":"3.0×","yellow":"3.5×","red":"4.0×"}.get(zone, "3.0×")
 
-    c1,c2,c3,c4,c5 = st.columns(5)
+    c1, c2, c3, c4, c5 = st.columns(5)
     c1.metric(t("bt_zone"),    f"{ze} {zone.upper()}")
     c2.metric(t("bt_exc"),     f"{n_exc}/250")
     c3.metric(t("bt_kupiec"),  f"{kup_p:.3f}", "✅ PASS" if kup_p>0.05 else "❌ FAIL")
     c4.metric(t("bt_chr"),     f"{chr_p:.3f}", "✅ PASS" if chr_p>0.05 else "⚠️")
     c5.metric(t("bt_capital"), mc)
 
-    col_l,col_r = st.columns([3,2])
+    col_l, col_r = st.columns([3, 2])
     with col_l:
         st.subheader(t("bt_fan"))
         ret = synth_returns(500)
         vol = ret.rolling(21).std().fillna(ret.std())
         q99  = t_dist.ppf(0.01, df=5)*vol
-        q975 = t_dist.ppf(0.025,df=5)*vol
+        q975 = t_dist.ppf(0.025, df=5)*vol
         q95  = t_dist.ppf(0.05, df=5)*vol
         fig = go.Figure()
-        for q,al,col_hex,nm in [(q99,0.07,"#ef476f","99%"),(q975,0.14,"#ffd166","97.5%"),(q95,0.22,"#06d6a0","95%")]:
-            r,g,b = int(col_hex[1:3],16),int(col_hex[3:5],16),int(col_hex[5:7],16)
+        for q, al, col_hex, nm in [(q99, 0.07, "#ef476f", "99%"), (q975, 0.14, "#ffd166", "97.5%"), (q95, 0.22, "#06d6a0", "95%")]:
+            r, g, b = int(col_hex[1:3], 16), int(col_hex[3:5], 16), int(col_hex[5:7], 16)
             fig.add_trace(go.Scatter(
                 x=list(ret.index)+list(ret.index[::-1]),
                 y=list(q)+list(-q[::-1]),
-                fill="toself",fillcolor=f"rgba({r},{g},{b},{al})",
-                line=dict(width=0),name=f"±{nm}"))
-        fig.add_trace(go.Scatter(x=ret.index,y=ret,name="Return",
-                                 line=dict(color="#073b4c",width=0.6),opacity=0.8))
-        fig.add_trace(go.Scatter(x=ret.index,y=q99,name="VaR 99%",
-                                 line=dict(color="#ef476f",dash="dash",width=1.5)))
+                fill="toself", fillcolor=f"rgba({r},{g},{b},{al})",
+                line=dict(width=0), name=f"±{nm}"))
+        fig.add_trace(go.Scatter(x=ret.index, y=ret, name="Return",
+                                 line=dict(color="#073b4c", width=0.6), opacity=0.8))
+        fig.add_trace(go.Scatter(x=ret.index, y=q99, name="VaR 99%",
+                                 line=dict(color="#ef476f", dash="dash", width=1.5)))
         exc_m = ret.values < q99.values
         if exc_m.any():
-            fig.add_trace(go.Scatter(x=ret.index[exc_m],y=ret.values[exc_m],
-                                     mode="markers",marker=dict(color="red",size=7,symbol="x"),
+            fig.add_trace(go.Scatter(x=ret.index[exc_m], y=ret.values[exc_m],
+                                     mode="markers", marker=dict(color="red", size=7, symbol="x"),
                                      name=f"Exc ({exc_m.sum()})"))
         fig.update_layout(**LAYOUT)
-        fig.update_layout(height=340,legend=dict(orientation="h",y=1.1))
-        st.plotly_chart(fig,use_container_width=True)
+        fig.update_layout(height=340, legend=dict(orientation="h", y=1.1, font=dict(color="black")))
+        fig.update_xaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+        fig.update_yaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+        st.plotly_chart(fig, use_container_width=True)
 
     with col_r:
         st.subheader(t("bt_binom"))
-        xs = np.arange(0,16)
-        ps = binom.pmf(xs,250,0.01)
+        xs = np.arange(0, 16)
+        ps = binom.pmf(xs, 250, 0.01)
         bc = ["#06d6a0" if x<=4 else "#ffd166" if x<=9 else "#ef476f" for x in xs]
         fig2 = go.Figure(go.Bar(
-            x=xs,y=ps*100,marker_color=bc,opacity=0.85,
+            x=xs, y=ps*100, marker_color=bc, opacity=0.85,
             text=[f"{p*100:.1f}%" if p>0.005 else "" for p in ps],
             textposition="outside"))
-        fig2.add_vline(x=n_exc,line_dash="dash",line_color="#073b4c",line_width=2.5,
-                       annotation_text=f"n={n_exc}")
-        fig2.update_layout(xaxis_title="Exceedances",yaxis_title="%", **LAYOUT)
+        fig2.add_vline(x=n_exc, line_dash="dash", line_color="#073b4c", line_width=2.5,
+                       annotation_text=f"n={n_exc}", annotation_font=dict(color="black"))
+        fig2.update_layout(xaxis_title="Exceedances", yaxis_title="%", **LAYOUT)
         fig2.update_layout(height=270)
-        st.plotly_chart(fig2,use_container_width=True)
-        for lb,col_str in [(t("zone_g"),"green"),(t("zone_y"),"darkorange"),(t("zone_r"),"red")]:
-            st.markdown(f"<span style='color:{col_str}'>●</span> {lb}",unsafe_allow_html=True)
+        fig2.update_xaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+        fig2.update_yaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+        st.plotly_chart(fig2, use_container_width=True)
+        for lb, col_str in [(t("zone_g"), "green"), (t("zone_y"), "darkorange"), (t("zone_r"), "red")]:
+            st.markdown(f"<span style='color:{col_str}; font-weight:bold;'>●</span> {lb}", unsafe_allow_html=True)
 
 # ─── Stress Testing ───────────────────────────────────────────────────────────
 def page_stress():
     st.title(t("st_title"))
-    st.markdown(f'<p class="sub">{t("st_sub")}</p>',unsafe_allow_html=True)
+    st.markdown(f'<p class="sub">{t("st_sub")}</p>', unsafe_allow_html=True)
     kpi_bar(); st.divider()
 
     SCEN = {
-        "gfc_2008":   {"name":"GFC 2008",            "eq":-0.57,"hy":1800,"vm":4.2,"col":"#ef476f"},
-        "covid_2020": {"name":"COVID-19 Q1 2020",    "eq":-0.34,"hy":900, "vm":3.1,"col":"#f72585"},
-        "rates_2022": {"name":"Rate Hike 2022",      "eq":-0.25,"hy":400, "vm":1.8,"col":"#7209b7"},
-        "svb_2023":   {"name":"SVB Run 2023",        "eq":-0.15,"hy":250, "vm":1.6,"col":"#4361ee"},
-        "dfast_adv":  {"name":"DFAST Severely Adv.", "eq":-0.55,"hy":600, "vm":3.5,"col":"#ff6b35"},
-        "latam_tail": {"name":"LATAM Tail Risk",     "eq":-0.40,"hy":800, "vm":2.5,"col":"#06d6a0"},
+        "gfc_2008":   {"name":"GFC 2008",            "eq":-0.57, "hy":1800, "vm":4.2, "col":"#ef476f"},
+        "covid_2020": {"name":"COVID-19 Q1 2020",    "eq":-0.34, "hy":900,  "vm":3.1, "col":"#f72585"},
+        "rates_2022": {"name":"Rate Hike 2022",      "eq":-0.25, "hy":400,  "vm":1.8, "col":"#7209b7"},
+        "svb_2023":   {"name":"SVB Run 2023",        "eq":-0.15, "hy":250,  "vm":1.6, "col":"#4361ee"},
+        "dfast_adv":  {"name":"DFAST Severely Adv.", "eq":-0.55, "hy":600,  "vm":3.5, "col":"#ff6b35"},
+        "latam_tail": {"name":"LATAM Tail Risk",     "eq":-0.40, "hy":800,  "vm":2.5, "col":"#06d6a0"},
     }
     stress = load_json("reports/stress_scenarios/stress_report.json")
     names  = [m["name"] for m in SCEN.values()]
     colors = [m["col"]  for m in SCEN.values()]
-    es_vals = [abs(stress.get(sid,{}).get("es_975_1d", abs(m["eq"]/252*m["vm"]*0.8)))
-               for sid,m in SCEN.items()]
+    es_vals = [abs(stress.get(sid, {}).get("es_975_1d", abs(m["eq"]/252*m["vm"]*0.8)))
+               for sid, m in SCEN.items()]
 
-    col_l,col_r = st.columns(2)
+    col_l, col_r = st.columns(2)
     with col_l:
         st.subheader(t("st_es"))
-        fig = go.Figure(go.Bar(x=names,y=es_vals,marker_color=colors,opacity=0.85,
-                               text=[f"{v:.4f}" for v in es_vals],textposition="outside"))
+        fig = go.Figure(go.Bar(x=names, y=es_vals, marker_color=colors, opacity=0.85,
+                               text=[f"{v:.4f}" for v in es_vals], textposition="outside"))
         fig.update_layout(yaxis_title="ES 97.5% (1-day)", **LAYOUT)
-        fig.update_layout(height=300,xaxis_tickangle=-30)
-        st.plotly_chart(fig,use_container_width=True)
+        fig.update_layout(height=300, xaxis_tickangle=-30)
+        fig.update_xaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+        fig.update_yaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+        st.plotly_chart(fig, use_container_width=True)
 
     with col_r:
         st.subheader(t("st_shocks"))
         fig2 = go.Figure()
-        fig2.add_trace(go.Bar(name="Equity %",x=names,
+        fig2.add_trace(go.Bar(name="Equity %", x=names,
                               y=[m["eq"]*100 for m in SCEN.values()],
-                              marker_color="#ef476f",opacity=0.8))
-        fig2.add_trace(go.Bar(name="Vol ×",x=names,
+                              marker_color="#ef476f", opacity=0.8))
+        fig2.add_trace(go.Bar(name="Vol ×", x=names,
                               y=[m["vm"] for m in SCEN.values()],
-                              marker_color="#4361ee",opacity=0.8))
-        fig2.update_layout(barmode="group",legend=dict(orientation="h",y=1.1), **LAYOUT)
-        fig2.update_layout(height=300,xaxis_tickangle=-30)
-        st.plotly_chart(fig2,use_container_width=True)
+                              marker_color="#4361ee", opacity=0.8))
+        fig2.update_layout(barmode="group", legend=dict(orientation="h", y=1.1, font=dict(color="black")), **LAYOUT)
+        fig2.update_layout(height=300, xaxis_tickangle=-30)
+        fig2.update_xaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+        fig2.update_yaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+        st.plotly_chart(fig2, use_container_width=True)
 
     st.subheader(t("st_mc"))
     np.random.seed(42)
     ret = synth_returns()
-    mu,sig = ret.mean(),ret.std()
-    z   = np.random.standard_t(5,10000)
+    mu, sig = ret.mean(), ret.std()
+    z   = np.random.standard_t(5, 10000)
     pnl = mu+sig*z
     fig3 = go.Figure()
-    fig3.add_trace(go.Histogram(x=pnl,nbinsx=150,histnorm="probability density",
-                                marker_color="#4361ee",opacity=0.6,name="t-Student (df=5)"))
-    for lb,pct in [("VaR 99.5%",0.5),("VaR 99%",1.0),("VaR 97.5%",2.5)]:
-        v = np.percentile(pnl,pct)
-        fig3.add_vline(x=v,line_dash="dash",line_width=1.5,
-                       annotation_text=f"{lb}:{v:.4f}",annotation_position="top right")
+    fig3.add_trace(go.Histogram(x=pnl, nbinsx=150, histnorm="probability density",
+                                marker_color="#4361ee", opacity=0.6, name="t-Student (df=5)"))
+    for lb, pct in [("VaR 99.5%", 0.5), ("VaR 99%", 1.0), ("VaR 97.5%", 2.5)]:
+        v = np.percentile(pnl, pct)
+        fig3.add_vline(x=v, line_dash="dash", line_width=1.5,
+                       annotation_text=f"{lb}:{v:.4f}", annotation_position="top right", annotation_font=dict(color="black"))
     fig3.update_layout(xaxis_title="P&L", **LAYOUT)
     fig3.update_layout(height=270)
-    st.plotly_chart(fig3,use_container_width=True)
-    c1,c2,c3 = st.columns(3)
-    c1.metric("VaR 99%",   f"{np.percentile(pnl,1):.5f}")
-    c2.metric("ES 97.5%",  f"{pnl[pnl<=np.percentile(pnl,2.5)].mean():.5f}")
-    c3.metric(t("st_worst"),f"{np.sort(pnl)[:100].mean():.5f}")
+    fig3.update_xaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+    fig3.update_yaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+    st.plotly_chart(fig3, use_container_width=True)
+    c1, c2, c3 = st.columns(3)
+    c1.metric("VaR 99%",   f"{np.percentile(pnl, 1):.5f}")
+    c2.metric("ES 97.5%",  f"{pnl[pnl<=np.percentile(pnl, 2.5)].mean():.5f}")
+    c3.metric(t("st_worst"), f"{np.sort(pnl)[:100].mean():.5f}")
 
 # ─── Regime Detection ─────────────────────────────────────────────────────────
 def page_regime():
     st.title(t("re_title"))
-    st.markdown(f'<p class="sub">{t("re_sub")}</p>',unsafe_allow_html=True)
+    st.markdown(f'<p class="sub">{t("re_sub")}</p>', unsafe_allow_html=True)
     kpi_bar(); st.divider()
 
     hmm  = load_json("models/champion/hmm_regime.json")
     regf = load_csv("data/raw/regime_features.csv")
     ret  = synth_returns(1260)
 
-    RN = {st.session_state.lang:{0:t("re_bull"),1:t("re_normal"),2:t("re_bear"),3:t("re_crisis")}}
-    RM = {0:0.6,1:1.0,2:1.8,3:3.5}
-    RC = {0:"#06d6a0",1:"#4361ee",2:"#ffd166",3:"#ef476f"}
-    RE = {0:"🟢",1:"🔵",2:"🟡",3:"🔴"}
+    RN = {st.session_state.lang:{0:t("re_bull"), 1:t("re_normal"), 2:t("re_bear"), 3:t("re_crisis")}}
+    RM = {0:0.6, 1:1.0, 2:1.8, 3:3.5}
+    RC = {0:"#06d6a0", 1:"#4361ee", 2:"#ffd166", 3:"#ef476f"}
+    RE = {0:"🟢", 1:"🔵", 2:"🟡", 3:"🔴"}
 
     if regf.empty or "regime" not in regf.columns:
         v21 = ret.rolling(21).std().fillna(ret.std())*np.sqrt(252)
-        p25,p50,p75 = v21.quantile([0.25,0.50,0.75])
-        regs = np.where(v21<p25,0,np.where(v21<p50,1,np.where(v21<p75,2,3)))
-        regf = pd.DataFrame({"regime":regs},index=ret.index)
+        p25, p50, p75 = v21.quantile([0.25, 0.50, 0.75])
+        regs = np.where(v21<p25, 0, np.where(v21<p50, 1, np.where(v21<p75, 2, 3)))
+        regf = pd.DataFrame({"regime":regs}, index=ret.index)
         for i in range(4): regf[f"regime_prob_{i}"]=(regf["regime"]==i).astype(float)
 
     rs  = regf["regime"]
     cur = int(rs.iloc[-1])
 
-    c1,c2,c3,c4 = st.columns(4)
-    for col,rid in zip([c1,c2,c3,c4],[0,1,2,3]):
+    c1, c2, c3, c4 = st.columns(4)
+    for col, rid in zip([c1, c2, c3, c4], [0, 1, 2, 3]):
         days = (rs==rid).sum(); pct = days/len(rs)
         delta = ("← Current" if st.session_state.lang=="en" else "← Actual") if rid==cur else ""
-        col.metric(f"{RE[rid]} {RN[st.session_state.lang][rid]}",f"{pct:.0%}",f"{days}d {delta}")
+        col.metric(f"{RE[rid]} {RN[st.session_state.lang][rid]}", f"{pct:.0%}", f"{days}d {delta}")
 
     st.divider()
-    col_l,col_r = st.columns([3,2])
+    col_l, col_r = st.columns([3, 2])
     with col_l:
         st.subheader(t("re_var"))
         ret250 = ret.tail(250)
         vbase  = float(ret250.quantile(0.01))
         reg250 = rs.reindex(ret250.index).fillna(1)
-        vreg   = pd.Series([vbase*RM.get(int(r),1.0) for r in reg250],index=ret250.index)
+        vreg   = pd.Series([vbase*RM.get(int(r), 1.0) for r in reg250], index=ret250.index)
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=ret250.index,y=ret250,name="Return",
-                                 line=dict(color="#4361ee",width=0.7),opacity=0.8))
-        fig.add_trace(go.Scatter(x=ret250.index,y=[vbase]*len(ret250),
+        fig.add_trace(go.Scatter(x=ret250.index, y=ret250, name="Return",
+                                 line=dict(color="#4361ee", width=0.7), opacity=0.8))
+        fig.add_trace(go.Scatter(x=ret250.index, y=[vbase]*len(ret250),
                                  name="VaR unconditional",
-                                 line=dict(color="#adb5bd",dash="dash",width=1.5)))
-        fig.add_trace(go.Scatter(x=ret250.index,y=vreg,
+                                 line=dict(color="#adb5bd", dash="dash", width=1.5)))
+        fig.add_trace(go.Scatter(x=ret250.index, y=vreg,
                                  name="VaR regime-adjusted",
-                                 line=dict(color="#ef476f",dash="dash",width=1.8)))
+                                 line=dict(color="#ef476f", dash="dash", width=1.8)))
         fig.update_layout(**LAYOUT)
-        fig.update_layout(height=310,legend=dict(orientation="h",y=1.1))
-        st.plotly_chart(fig,use_container_width=True)
+        fig.update_layout(height=310, legend=dict(orientation="h", y=1.1, font=dict(color="black")))
+        fig.update_xaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+        fig.update_yaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+        st.plotly_chart(fig, use_container_width=True)
         exc_b = (ret250.values<vbase).sum()
         exc_r = (ret250.values<vreg.values).sum()
         st.info(f"{t('re_improve')}: **{exc_b} → {exc_r}** exceedances "
@@ -672,26 +707,26 @@ def page_regime():
 
     with col_r:
         st.subheader(t("re_dist"))
-        dist = [(RN[st.session_state.lang][i],(rs==i).sum(),RC[i]) for i in range(4)]
-        fig2 = go.Figure(go.Pie(labels=[d[0] for d in dist],values=[d[1] for d in dist],
-                                marker_colors=[d[2] for d in dist],hole=0.45,textinfo="label+percent"))
+        dist = [(RN[st.session_state.lang][i], (rs==i).sum(), RC[i]) for i in range(4)]
+        fig2 = go.Figure(go.Pie(labels=[d[0] for d in dist], values=[d[1] for d in dist],
+                                marker_colors=[d[2] for d in dist], hole=0.45, textinfo="label+percent"))
         fig2.update_layout(**LAYOUT)
-        fig2.update_layout(height=230,showlegend=False)
-        st.plotly_chart(fig2,use_container_width=True)
+        fig2.update_layout(height=230, showlegend=False)
+        st.plotly_chart(fig2, use_container_width=True)
 
         st.subheader(t("re_trans"))
         trans = hmm.get("hmm_transmat",
-            [[0.97,0.02,0.01,0.00],[0.03,0.92,0.04,0.01],
-             [0.01,0.08,0.87,0.04],[0.00,0.02,0.05,0.93]])
+            [[0.97, 0.02, 0.01, 0.00], [0.03, 0.92, 0.04, 0.01],
+             [0.01, 0.08, 0.87, 0.04], [0.00, 0.02, 0.05, 0.93]])
         rns = [RN[st.session_state.lang][i][:8] for i in range(4)]
-        df_t = pd.DataFrame(trans,index=rns,columns=rns)
-        st.dataframe(df_t.style.background_gradient(cmap="RdYlGn",axis=None).format("{:.2f}"),
+        df_t = pd.DataFrame(trans, index=rns, columns=rns)
+        st.dataframe(df_t.style.background_gradient(cmap="RdYlGn", axis=None).format("{:.2f}"),
                      use_container_width=True)
 
 # ─── NLP Sentiment ────────────────────────────────────────────────────────────
 def page_sentiment():
     st.title(t("se_title"))
-    st.markdown(f'<p class="sub">{t("se_sub")}</p>',unsafe_allow_html=True)
+    st.markdown(f'<p class="sub">{t("se_sub")}</p>', unsafe_allow_html=True)
     kpi_bar(); st.divider()
 
     sent = load_csv("data/raw/sentiment/sentiment_daily.csv")
@@ -705,29 +740,31 @@ def page_sentiment():
     ma21  = float(sent["sentiment_ma21"].iloc[-1]) if "sentiment_ma21" in sent.columns else 0.0
     n_ext = int((sent["sentiment_mean"]<sent["sentiment_mean"].quantile(0.10)).sum())
 
-    c1,c2,c3,c4 = st.columns(4)
+    c1, c2, c3, c4 = st.columns(4)
     c1.metric(t("se_score"),  f"{cur_s:+.3f}",
               "🟢 Positive" if cur_s>0.1 else "🔴 Negative" if cur_s<-0.1 else "🟡 Neutral")
     c2.metric("MA 21d",       f"{ma21:+.3f}")
-    c3.metric(t("se_extreme"),f"{n_ext}d",f"{n_ext/len(sent):.1%}")
+    c3.metric(t("se_extreme"), f"{n_ext}d", f"{n_ext/len(sent):.1%}")
     c4.metric(t("se_method"), "Synthetic" if is_s else "FinBERT")
 
-    col_l,col_r = st.columns([3,2])
+    col_l, col_r = st.columns([3, 2])
     with col_l:
         st.subheader(t("se_score"))
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=sent.index,y=sent["sentiment_mean"],
-                                 fill="tozeroy",line=dict(color="#4361ee",width=0.8),
-                                 fillcolor="rgba(67,97,238,0.12)",name="Sentiment"))
+        fig.add_trace(go.Scatter(x=sent.index, y=sent["sentiment_mean"],
+                                 fill="tozeroy", line=dict(color="#4361ee", width=0.8),
+                                 fillcolor="rgba(67,97,238,0.12)", name="Sentiment"))
         if "sentiment_ma21" in sent.columns:
-            fig.add_trace(go.Scatter(x=sent.index,y=sent["sentiment_ma21"],
-                                     line=dict(color="#ef476f",width=1.5,dash="dash"),name="MA21d"))
-        fig.add_hline(y=0,line_color="black",line_width=0.8)
-        fig.add_hline(y=sent["sentiment_mean"].quantile(0.10),line_dash="dot",
-                      line_color="#ef476f",annotation_text="Extreme neg. threshold")
+            fig.add_trace(go.Scatter(x=sent.index, y=sent["sentiment_ma21"],
+                                     line=dict(color="#ef476f", width=1.5, dash="dash"), name="MA21d"))
+        fig.add_hline(y=0, line_color="black", line_width=0.8)
+        fig.add_hline(y=sent["sentiment_mean"].quantile(0.10), line_dash="dot",
+                      line_color="#ef476f", annotation_text="Extreme neg. threshold", annotation_font=dict(color="black"))
         fig.update_layout(**LAYOUT)
-        fig.update_layout(height=300,legend=dict(orientation="h",y=1.1))
-        st.plotly_chart(fig,use_container_width=True)
+        fig.update_layout(height=300, legend=dict(orientation="h", y=1.1, font=dict(color="black")))
+        fig.update_xaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+        fig.update_yaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+        st.plotly_chart(fig, use_container_width=True)
 
     with col_r:
         st.subheader(t("se_impact"))
@@ -738,135 +775,145 @@ def page_sentiment():
         v_nrm = abs(float(r_nrm.quantile(0.01))) if len(r_nrm)>10 else 0.025
         v_ext = abs(float(r_ext.quantile(0.01))) if len(r_ext)>10 else v_nrm*1.9
         lb_n = "Normal"; lb_e = "Extreme neg." if st.session_state.lang=="en" else "Sent. extremo"
-        fig2 = go.Figure(go.Bar(x=[lb_n,lb_e],y=[v_nrm,v_ext],
-                                marker_color=["#06d6a0","#ef476f"],opacity=0.85,
-                                text=[f"{v:.4f}" for v in [v_nrm,v_ext]],textposition="outside"))
+        fig2 = go.Figure(go.Bar(x=[lb_n, lb_e], y=[v_nrm, v_ext],
+                                marker_color=["#06d6a0","#ef476f"], opacity=0.85,
+                                text=[f"{v:.4f}" for v in [v_nrm, v_ext]], textposition="outside"))
         fig2.update_layout(yaxis_title="VaR 99% |abs|", **LAYOUT)
         fig2.update_layout(height=240)
-        st.plotly_chart(fig2,use_container_width=True)
+        fig2.update_xaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+        fig2.update_yaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+        st.plotly_chart(fig2, use_container_width=True)
         ratio = v_ext/v_nrm if v_nrm>0 else 1
-        st.metric("VaR ratio",f"{ratio:.2f}×",f"+{(ratio-1):.0%}")
+        st.metric("VaR ratio", f"{ratio:.2f}×", f"+{(ratio-1):.0%}")
 
     st.subheader(t("se_corr"))
     lag1 = sent["sentiment_mean"].shift(1).dropna()
     rnxt = ret.reindex(lag1.index)
-    aln  = pd.concat([lag1,rnxt],axis=1).dropna()
+    aln  = pd.concat([lag1, rnxt], axis=1).dropna()
     if len(aln)>30:
-        r_v,p_v = pearsonr(aln.iloc[:,0],aln.iloc[:,1])
+        r_v, p_v = pearsonr(aln.iloc[:,0], aln.iloc[:,1])
         rc = aln.iloc[:,0].rolling(63).corr(aln.iloc[:,1])
         fig3 = go.Figure()
-        fig3.add_trace(go.Scatter(x=rc.index,y=rc,fill="tozeroy",
-                                  line=dict(color="#7209b7",width=1.2),
+        fig3.add_trace(go.Scatter(x=rc.index, y=rc, fill="tozeroy",
+                                  line=dict(color="#7209b7", width=1.2),
                                   fillcolor="rgba(114,9,183,0.12)"))
-        fig3.add_hline(y=0,line_color="black",line_width=0.8)
+        fig3.add_hline(y=0, line_color="black", line_width=0.8)
         fig3.update_layout(yaxis_title="Rolling 63d corr", **LAYOUT)
         fig3.update_layout(height=200)
-        st.plotly_chart(fig3,use_container_width=True)
-        ca,cb = st.columns(2)
-        ca.metric("Pearson r",f"{r_v:.4f}")
-        cb.metric("p-value",f"{p_v:.4f}","✅ Significant" if p_v<0.05 else "⚠️ Not significant")
+        fig3.update_xaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+        fig3.update_yaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+        st.plotly_chart(fig3, use_container_width=True)
+        ca, cb = st.columns(2)
+        ca.metric("Pearson r", f"{r_v:.4f}")
+        cb.metric("p-value", f"{p_v:.4f}", "✅ Significant" if p_v<0.05 else "⚠️ Not significant")
 
 # ─── Conformal Prediction ─────────────────────────────────────────────────────
 def page_conformal():
     st.title(t("cp_title"))
-    st.markdown(f'<p class="sub">{t("cp_sub")}</p>',unsafe_allow_html=True)
+    st.markdown(f'<p class="sub">{t("cp_sub")}</p>', unsafe_allow_html=True)
     kpi_bar(); st.divider()
 
     cp = load_json("reports/conformal_backtest.json") or {
-        "coverage_test":{"target_coverage":0.99,"conformal_coverage":0.992,
-                         "classical_coverage":0.984,"conformal_exceedances":2,
-                         "classical_exceedances":4,"conformal_kupiec_pval":0.61,
+        "coverage_test":{"target_coverage":0.99, "conformal_coverage":0.992,
+                         "classical_coverage":0.984, "conformal_exceedances":2,
+                         "classical_exceedances":4, "conformal_kupiec_pval":0.61,
                          "classical_kupiec_pval":0.29},
-        "nonconformity_quantile":0.0042,"conformal_valid":True,"n_calibration":189}
+        "nonconformity_quantile":0.0042, "conformal_valid":True, "n_calibration":189}
 
-    ct     = cp.get("coverage_test",{})
-    conf_c = ct.get("conformal_coverage",0.992)
-    clas_c = ct.get("classical_coverage",0.984)
-    conf_e = ct.get("conformal_exceedances",2)
-    clas_e = ct.get("classical_exceedances",4)
-    nc_q   = cp.get("nonconformity_quantile",0.0042)
-    valid  = cp.get("conformal_valid",True)
+    ct     = cp.get("coverage_test", {})
+    conf_c = ct.get("conformal_coverage", 0.992)
+    clas_c = ct.get("classical_coverage", 0.984)
+    conf_e = ct.get("conformal_exceedances", 2)
+    clas_e = ct.get("classical_exceedances", 4)
+    nc_q   = cp.get("nonconformity_quantile", 0.0042)
+    valid  = cp.get("conformal_valid", True)
 
-    c1,c2,c3,c4,c5 = st.columns(5)
-    c1.metric(t("cp_guarantee"),"99.0%")
-    c2.metric(t("cp_empirical"),f"{conf_c:.2%}","✅" if conf_c>=0.99 else "❌")
+    c1, c2, c3, c4, c5 = st.columns(5)
+    c1.metric(t("cp_guarantee"), "99.0%")
+    c2.metric(t("cp_empirical"), f"{conf_c:.2%}", "✅" if conf_c>=0.99 else "❌")
     c3.metric(t("cp_valid"),    "✅ Yes" if valid else "❌ No")
     c4.metric(t("cp_adj"),      f"{nc_q:+.4f}")
-    c5.metric("Improvement",    f"{clas_e}→{conf_e}","−"+str(clas_e-conf_e) if clas_e>conf_e else "0")
+    c5.metric("Improvement",    f"{clas_e}→{conf_e}", "−"+str(clas_e-conf_e) if clas_e>conf_e else "0")
 
-    col_l,col_r = st.columns(2)
+    col_l, col_r = st.columns(2)
     with col_l:
         st.subheader(t("cp_nonconf"))
         ret = synth_returns()
-        vb  = ret.rolling(60,min_periods=20).quantile(0.01).fillna(ret.quantile(0.01))
+        vb  = ret.rolling(60, min_periods=20).quantile(0.01).fillna(ret.quantile(0.01))
         scores = ret.values[:189]-vb.values[:189]
-        q_lv = min(np.ceil(0.99*190)/189,1.0)
-        q_v  = float(np.quantile(scores,q_lv))
+        q_lv = min(np.ceil(0.99*190)/189, 1.0)
+        q_v  = float(np.quantile(scores, q_lv))
         fig = go.Figure()
-        fig.add_trace(go.Histogram(x=scores,nbinsx=40,marker_color="#4361ee",opacity=0.7))
-        fig.add_vline(x=q_v,line_dash="dash",line_color="#ef476f",line_width=2.5,
-                      annotation_text=f"Q₉₉%={q_v:.4f}",annotation_position="top right")
-        fig.add_vline(x=0,line_color="black",line_width=0.8)
+        fig.add_trace(go.Histogram(x=scores, nbinsx=40, marker_color="#4361ee", opacity=0.7))
+        fig.add_vline(x=q_v, line_dash="dash", line_color="#ef476f", line_width=2.5,
+                      annotation_text=f"Q₉₉%={q_v:.4f}", annotation_position="top right", annotation_font=dict(color="black"))
+        fig.add_vline(x=0, line_color="black", line_width=0.8)
         fig.update_layout(xaxis_title="score = return − VaR_predicted", **LAYOUT)
         fig.update_layout(height=280)
-        st.plotly_chart(fig,use_container_width=True)
+        fig.update_xaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+        fig.update_yaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+        st.plotly_chart(fig, use_container_width=True)
 
     with col_r:
         st.subheader(t("cp_compare"))
         lb_cl = t("cp_exc_cl"); lb_cp = t("cp_exc_cp")
-        fig2 = go.Figure(go.Bar(x=[lb_cl,lb_cp],y=[clas_e,conf_e],
-                                marker_color=["#adb5bd","#4361ee"],opacity=0.85,
-                                text=[clas_e,conf_e],textposition="outside"))
-        fig2.add_hline(y=4,line_dash="dash",line_color="green",line_width=1.5,
-                       annotation_text="Basel III green zone limit")
+        fig2 = go.Figure(go.Bar(x=[lb_cl, lb_cp], y=[clas_e, conf_e],
+                                marker_color=["#adb5bd","#4361ee"], opacity=0.85,
+                                text=[clas_e, conf_e], textposition="outside"))
+        fig2.add_hline(y=4, line_dash="dash", line_color="green", line_width=1.5,
+                       annotation_text="Basel III green zone limit", annotation_font=dict(color="black"))
         fig2.update_layout(yaxis_title="N exceedances", showlegend=False, **LAYOUT)
         fig2.update_layout(height=260)
-        st.plotly_chart(fig2,use_container_width=True)
-        for lb,cov,exc in [(lb_cl,clas_c,clas_e),(lb_cp,conf_c,conf_e)]:
+        fig2.update_xaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+        fig2.update_yaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+        st.plotly_chart(fig2, use_container_width=True)
+        for lb, cov, exc in [(lb_cl, clas_c, clas_e), (lb_cp, conf_c, conf_e)]:
             ze = "🟢" if exc<=4 else "🟡" if exc<=9 else "🔴"
             st.markdown(f"{ze} **{lb}**: {cov:.2%} coverage · {exc} exc.")
 
     st.subheader(t("cp_adaptive"))
     nc_all = ret.values-vb.values
-    v_ad   = np.full(len(ret),np.nan)
-    for i in range(60,len(ret)):
-        cal = nc_all[max(0,i-60):i]
-        q_a = np.quantile(cal,min(np.ceil(0.99*61)/60,1.0))
+    v_ad   = np.full(len(ret), np.nan)
+    for i in range(60, len(ret)):
+        cal = nc_all[max(0, i-60):i]
+        q_a = np.quantile(cal, min(np.ceil(0.99*61)/60, 1.0))
         v_ad[i] = vb.values[i]-q_a
-    v_ad_s = pd.Series(v_ad,index=ret.index)
+    v_ad_s = pd.Series(v_ad, index=ret.index)
     fig3 = go.Figure()
-    fig3.add_trace(go.Scatter(x=ret.index,y=ret,name="Return",
-                              line=dict(color="#4361ee",width=0.6),opacity=0.7))
-    fig3.add_trace(go.Scatter(x=ret.index,y=vb,name="Classical VaR",
-                              line=dict(color="#adb5bd",dash="dash",width=1.2)))
-    fig3.add_trace(go.Scatter(x=ret.index,y=v_ad_s,name="Conformal adaptive",
-                              line=dict(color="#ef476f",width=1.5)))
+    fig3.add_trace(go.Scatter(x=ret.index, y=ret, name="Return",
+                              line=dict(color="#4361ee", width=0.6), opacity=0.7))
+    fig3.add_trace(go.Scatter(x=ret.index, y=vb, name="Classical VaR",
+                              line=dict(color="#adb5bd", dash="dash", width=1.2)))
+    fig3.add_trace(go.Scatter(x=ret.index, y=v_ad_s, name="Conformal adaptive",
+                              line=dict(color="#ef476f", width=1.5)))
     fig3.update_layout(**LAYOUT)
-    fig3.update_layout(height=270,legend=dict(orientation="h",y=1.1))
-    st.plotly_chart(fig3,use_container_width=True)
+    fig3.update_layout(height=270, legend=dict(orientation="h", y=1.1, font=dict(color="black")))
+    fig3.update_xaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+    fig3.update_yaxes(titlefont=dict(color="black"), tickfont=dict(color="black"))
+    st.plotly_chart(fig3, use_container_width=True)
 
 # ─── Governance ───────────────────────────────────────────────────────────────
 def page_governance():
     st.title(t("go_title"))
-    st.markdown(f'<p class="sub">{t("go_sub")}</p>',unsafe_allow_html=True)
+    st.markdown(f'<p class="sub">{t("go_sub")}</p>', unsafe_allow_html=True)
     kpi_bar(); st.divider()
 
     sr = load_json("reports/sr117_validation.json") or {
         "model_name":"Market VaR — TFT v1.0",
         "validation_date":"2025-01-15T10:00:00",
-        "overall_status":"approved","overall_score":0.88,
+        "overall_status":"approved", "overall_score":0.88,
         "checks":[
-            {"section":"Conceptual Soundness","requirement":"Statistical theory documented","status":"pass","score":1.0,"evidence":"ADRs + Basel III mapping docs"},
-            {"section":"Conceptual Soundness","requirement":"Benchmark comparison (GARCH)","status":"pass","score":1.0,"evidence":"Ablation study NB04"},
-            {"section":"Conceptual Soundness","requirement":"Data documented and validated","status":"pass","score":0.95,"evidence":"yfinance + FRED + quality checks"},
-            {"section":"Ongoing Monitoring","requirement":"Drift monitoring active (PSI/KS)","status":"pass","score":1.0,"evidence":"src/monitoring/drift.py"},
-            {"section":"Ongoing Monitoring","requirement":"Model Card generated","status":"pass","score":1.0,"evidence":"reports/model_card.html"},
-            {"section":"Ongoing Monitoring","requirement":"Audit trail active","status":"pass","score":0.9,"evidence":"SHA-256 hash chain"},
-            {"section":"Ongoing Monitoring","requirement":"Re-validation plan defined","status":"partial","score":0.7,"evidence":"Semiannual frequency defined"},
-            {"section":"Outcomes Analysis","requirement":"Kupiec test PASS","status":"pass","score":1.0,"evidence":"p=0.38 > 0.05"},
-            {"section":"Outcomes Analysis","requirement":"Christoffersen PASS","status":"pass","score":1.0,"evidence":"p=0.55 > 0.05"},
-            {"section":"Outcomes Analysis","requirement":"Basel III Traffic Light — green","status":"pass","score":1.0,"evidence":"3 exceedances / 250 days"},
-            {"section":"Outcomes Analysis","requirement":"Stress testing ≥4 scenarios","status":"pass","score":1.0,"evidence":"6 scenarios + Monte Carlo"},
+            {"section":"Conceptual Soundness", "requirement":"Statistical theory documented", "status":"pass", "score":1.0, "evidence":"ADRs + Basel III mapping docs"},
+            {"section":"Conceptual Soundness", "requirement":"Benchmark comparison (GARCH)", "status":"pass", "score":1.0, "evidence":"Ablation study NB04"},
+            {"section":"Conceptual Soundness", "requirement":"Data documented and validated", "status":"pass", "score":0.95, "evidence":"yfinance + FRED + quality checks"},
+            {"section":"Ongoing Monitoring", "requirement":"Drift monitoring active (PSI/KS)", "status":"pass", "score":1.0, "evidence":"src/monitoring/drift.py"},
+            {"section":"Ongoing Monitoring", "requirement":"Model Card generated", "status":"pass", "score":1.0, "evidence":"reports/model_card.html"},
+            {"section":"Ongoing Monitoring", "requirement":"Audit trail active", "status":"pass", "score":0.9, "evidence":"SHA-256 hash chain"},
+            {"section":"Ongoing Monitoring", "requirement":"Re-validation plan defined", "status":"partial", "score":0.7, "evidence":"Semiannual frequency defined"},
+            {"section":"Outcomes Analysis", "requirement":"Kupiec test PASS", "status":"pass", "score":1.0, "evidence":"p=0.38 > 0.05"},
+            {"section":"Outcomes Analysis", "requirement":"Christoffersen PASS", "status":"pass", "score":1.0, "evidence":"p=0.55 > 0.05"},
+            {"section":"Outcomes Analysis", "requirement":"Basel III Traffic Light — green", "status":"pass", "score":1.0, "evidence":"3 exceedances / 250 days"},
+            {"section":"Outcomes Analysis", "requirement":"Stress testing ≥4 scenarios", "status":"pass", "score":1.0, "evidence":"6 scenarios + Monte Carlo"},
         ],
         "limitations":[
             "Calibrated 2000-2024 — does not capture post-2024 LATAM hyperinflation",
@@ -875,110 +922,110 @@ def page_governance():
             "Correlations may break down in crisis (correlation breakdown effect)",
         ]}
 
-    score  = sr.get("overall_score",0.88)
-    status = sr.get("overall_status","approved")
-    checks = sr.get("checks",[])
-    se = {"approved":"✅","conditional":"⚠️","rejected":"❌"}.get(status,"❓")
-    sl = {"approved":t("approved"),"conditional":t("review"),"rejected":t("rejected")}.get(status,status)
+    score  = sr.get("overall_score", 0.88)
+    status = sr.get("overall_status", "approved")
+    checks = sr.get("checks", [])
+    se = {"approved":"✅","conditional":"⚠️","rejected":"❌"}.get(status, "❓")
+    sl = {"approved":t("approved"), "conditional":t("review"), "rejected":t("rejected")}.get(status, status)
 
-    c1,c2,c3 = st.columns(3)
+    c1, c2, c3 = st.columns(3)
     with c1:
         fig_g = go.Figure(go.Indicator(
-            mode="gauge+number",value=score*100,
-            title={"text":t("go_score"),"font":{"size":13, "color":"black"}},
-            number={"suffix":"%","font":{"size":20, "color":"black"}},
-            gauge={"axis":{"range":[0,100], "tickfont":{"color":"black"}},
+            mode="gauge+number", value=score*100,
+            title={"text":t("go_score"), "font":{"size":13, "color":"black"}},
+            number={"suffix":"%", "font":{"size":20, "color":"black"}},
+            gauge={"axis":{"range":[0, 100], "tickfont":{"color":"black"}},
                    "bar":{"color":"#06d6a0" if score>=0.8 else "#ffd166" if score>=0.6 else "#ef476f"},
-                   "steps":[{"range":[0,60],"color":"#fee2e2"},
-                             {"range":[60,80],"color":"#fef3c7"},
-                             {"range":[80,100],"color":"#d1fae5"}]}))
-        fig_g.update_layout(margin=dict(t=40,b=10,l=10,r=10), **LAYOUT)
+                   "steps":[{"range":[0, 60], "color":"#fee2e2"},
+                             {"range":[60, 80], "color":"#fef3c7"},
+                             {"range":[80, 100], "color":"#d1fae5"}]}))
+        fig_g.update_layout(margin=dict(t=40, b=10, l=10, r=10), **LAYOUT)
         fig_g.update_layout(height=200)
-        st.plotly_chart(fig_g,use_container_width=True)
+        st.plotly_chart(fig_g, use_container_width=True)
     with c2:
-        st.metric(t("go_status"),f"{se} {sl}")
-        st.metric("Model",sr.get("model_name","TFT v1.0"))
-        st.metric("Validation date",sr.get("validation_date","")[:10])
+        st.metric(t("go_status"), f"{se} {sl}")
+        st.metric("Model", sr.get("model_name", "TFT v1.0"))
+        st.metric("Validation date", sr.get("validation_date", "")[:10])
     with c3:
         st.markdown(f"**{t('go_regs')}:**")
-        for r in ["Basel III FRTB (IMA)","SR 11-7 (Fed/OCC)","EU AI Act Annex III/IV","BCBS 239"]:
+        for r in ["Basel III FRTB (IMA)", "SR 11-7 (Fed/OCC)", "EU AI Act Annex III/IV", "BCBS 239"]:
             st.markdown(f"✅ {r}")
         if Path("reports/model_card.html").exists():
             st.success(f"✅ {t('go_card')}: reports/model_card.html")
 
     st.divider()
-    col_l,col_r = st.columns([3,2])
-    SCOL = {"pass":"#d1fae5","fail":"#fee2e2","partial":"#fef3c7","na":"#f3f4f6"}
-    SEMO = {"pass":"✅","fail":"❌","partial":"⚠️","na":"➖"}
+    col_l, col_r = st.columns([3, 2])
+    SCOL = {"pass":"#d1fae5", "fail":"#fee2e2", "partial":"#fef3c7", "na":"#f3f4f6"}
+    SEMO = {"pass":"✅", "fail":"❌", "partial":"⚠️", "na":"➖"}
     SMAP = {"Conceptual Soundness":t("go_p1"),
             "Ongoing Monitoring":t("go_p2"),
             "Outcomes Analysis":t("go_p3")}
     with col_l:
         st.subheader(t("go_checks"))
-        for sec in ["Conceptual Soundness","Ongoing Monitoring","Outcomes Analysis"]:
+        for sec in ["Conceptual Soundness", "Ongoing Monitoring", "Outcomes Analysis"]:
             sc = [c for c in checks if c.get("section")==sec]
             if not sc: continue
-            avg = np.mean([c.get("score",0) for c in sc])
-            st.markdown(f"**{SMAP.get(sec,sec)}** — {avg:.0%}")
+            avg = np.mean([c.get("score", 0) for c in sc])
+            st.markdown(f"**{SMAP.get(sec, sec)}** — {avg:.0%}")
             for c in sc:
                 st.markdown(
-                    f'<div style="background:{SCOL.get(c.get("status",""),"#f3f4f6")};'
-                    f'padding:6px 10px;border-radius:6px;margin:3px 0;font-size:13px">'
-                    f'{SEMO.get(c.get("status",""),"?")} <b>[{c.get("score",0):.0%}]</b> '
+                    f'<div style="background:{SCOL.get(c.get("status",""), "#f3f4f6")};'
+                    f'padding:6px 10px;border-radius:6px;margin:3px 0;font-size:13px;color:black !important">'
+                    f'{SEMO.get(c.get("status",""), "?")} <b>[{c.get("score", 0):.0%}]</b> '
                     f'{c.get("requirement","")}'
-                    f'<br><span style="color:#64748b;font-size:11px">{c.get("evidence","")}</span></div>',
+                    f'<br><span style="color:#2d3748;font-size:11px;font-weight:500;">{c.get("evidence","")}</span></div>',
                     unsafe_allow_html=True)
             st.markdown("")
 
     with col_r:
         st.subheader(t("go_limits"))
-        for lim in sr.get("limitations",[]):
+        for lim in sr.get("limitations", []):
             st.warning(f"⚠ {lim}")
         st.subheader(t("go_euai"))
-        for art,ok in [("Art. 9 — Risk Management","✅"),
-                       ("Art. 10 — Data Governance","✅"),
-                       ("Art. 11 — Technical Docs","✅"),
-                       ("Art. 12 — Record-keeping","✅"),
-                       ("Art. 13 — Transparency","✅"),
-                       ("Art. 14 — Human Oversight","⚠️"),
-                       ("Art. 15 — Accuracy & Robustness","✅")]:
+        for art, ok in [("Art. 9 — Risk Management", "✅"),
+                       ("Art. 10 — Data Governance", "✅"),
+                       ("Art. 11 — Technical Docs", "✅"),
+                       ("Art. 12 — Record-keeping", "✅"),
+                       ("Art. 13 — Transparency", "✅"),
+                       ("Art. 14 — Human Oversight", "⚠️"),
+                       ("Art. 15 — Accuracy & Robustness", "✅")]:
             st.markdown(f"{ok} {art}")
 
 # ─── Audit Trail ──────────────────────────────────────────────────────────────
 def page_audit():
     st.title(t("au_title"))
-    st.markdown(f'<p class="sub">{t("au_sub")}</p>',unsafe_allow_html=True)
+    st.markdown(f'<p class="sub">{t("au_sub")}</p>', unsafe_allow_html=True)
     kpi_bar(); st.divider()
 
     entries = load_audit_trail("reports/audit_trail.jsonl")
     if not entries:
         st.info(t("no_data"))
         entries = [
-            {"timestamp":"2025-01-15T09:00:00Z","event_type":"pipeline_started",
-             "actor":"pipeline","payload":{"version":"1.0"},"previous_hash":"GENESIS",
+            {"timestamp":"2025-01-15T09:00:00Z", "event_type":"pipeline_started",
+             "actor":"pipeline", "payload":{"version":"1.0"}, "previous_hash":"GENESIS",
              "hash":"abc123def456abc123def456abc123def456abc123def456abc123def456abc1"},
-            {"timestamp":"2025-01-15T09:05:00Z","event_type":"data_ingested",
-             "actor":"pipeline","payload":{"n_assets":8,"period":"2000-2024"},
+            {"timestamp":"2025-01-15T09:05:00Z", "event_type":"data_ingested",
+             "actor":"pipeline", "payload":{"n_assets":8, "period":"2000-2024"},
              "previous_hash":"abc123def456abc123def456abc123def456abc123def456abc123def456abc1",
              "hash":"def456ghi789def456ghi789def456ghi789def456ghi789def456ghi789def4"},
-            {"timestamp":"2025-01-15T09:30:00Z","event_type":"model_trained",
-             "actor":"pipeline","payload":{"model":"TFT","val_loss":0.00041},
+            {"timestamp":"2025-01-15T09:30:00Z", "event_type":"model_trained",
+             "actor":"pipeline", "payload":{"model":"TFT", "val_loss":0.00041},
              "previous_hash":"def456ghi789def456ghi789def456ghi789def456ghi789def456ghi789def4",
              "hash":"ghi789jkl012ghi789jkl012ghi789jkl012ghi789jkl012ghi789jkl012ghi7"},
-            {"timestamp":"2025-01-15T09:45:00Z","event_type":"backtesting_completed",
-             "actor":"pipeline","payload":{"kupiec_pval":0.38,"exceedances":3,"zone":"green"},
+            {"timestamp":"2025-01-15T09:45:00Z", "event_type":"backtesting_completed",
+             "actor":"pipeline", "payload":{"kupiec_pval":0.38, "exceedances":3, "zone":"green"},
              "previous_hash":"ghi789jkl012ghi789jkl012ghi789jkl012ghi789jkl012ghi789jkl012ghi7",
              "hash":"jkl012mno345jkl012mno345jkl012mno345jkl012mno345jkl012mno345jkl0"},
-            {"timestamp":"2025-01-15T09:50:00Z","event_type":"sr117_validation_completed",
-             "actor":"pipeline","payload":{"overall_status":"approved","score":0.88},
+            {"timestamp":"2025-01-15T09:50:00Z", "event_type":"sr117_validation_completed",
+             "actor":"pipeline", "payload":{"overall_status":"approved", "score":0.88},
              "previous_hash":"jkl012mno345jkl012mno345jkl012mno345jkl012mno345jkl012mno345jkl0",
              "hash":"mno345pqr678mno345pqr678mno345pqr678mno345pqr678mno345pqr678mno3"},
-            {"timestamp":"2025-01-15T09:55:00Z","event_type":"model_card_generated",
-             "actor":"pipeline","payload":{"path":"reports/model_card.html"},
+            {"timestamp":"2025-01-15T09:55:00Z", "event_type":"model_card_generated",
+             "actor":"pipeline", "payload":{"path":"reports/model_card.html"},
              "previous_hash":"mno345pqr678mno345pqr678mno345pqr678mno345pqr678mno345pqr678mno3",
              "hash":"pqr678stu901pqr678stu901pqr678stu901pqr678stu901pqr678stu901pqr6"},
-            {"timestamp":"2025-01-15T10:00:00Z","event_type":"pipeline_completed",
-             "actor":"pipeline","payload":{"champion":"TFT","status":"approved"},
+            {"timestamp":"2025-01-15T10:00:00Z", "event_type":"pipeline_completed",
+             "actor":"pipeline", "payload":{"champion":"TFT", "status":"approved"},
              "previous_hash":"pqr678stu901pqr678stu901pqr678stu901pqr678stu901pqr678stu901pqr6",
              "hash":"stu901vwx234stu901vwx234stu901vwx234stu901vwx234stu901vwx234stu9"},
         ]
@@ -986,13 +1033,13 @@ def page_audit():
     # Verify integrity
     ok = True; prev = "GENESIS"
     for e in entries:
-        stored = e.get("hash","")
-        ec = {k:v for k,v in e.items() if k!="hash"}
-        computed = hashlib.sha256(json.dumps(ec,sort_keys=True,default=str).encode()).hexdigest()
+        stored = e.get("hash", "")
+        ec = {k:v for k, v in e.items() if k!="hash"}
+        computed = hashlib.sha256(json.dumps(ec, sort_keys=True, default=str).encode()).hexdigest()
         if computed!=stored or e.get("previous_hash")!=prev: ok=False; break
         prev = stored
 
-    c1,c2,c3 = st.columns(3)
+    c1, c2, c3 = st.columns(3)
     c1.metric(t("au_integrity"), t("au_ok") if ok else t("au_fail"))
     c2.metric(t("au_events"),    len(entries))
     c3.metric("Hash algorithm",  "SHA-256")
@@ -1002,39 +1049,39 @@ def page_audit():
     rows = []
     for e in entries[-10:][::-1]:
         rows.append({
-            t("au_ts"):    e.get("timestamp","")[:19].replace("T"," "),
-            t("au_event"): e.get("event_type",""),
-            t("au_actor"): e.get("actor",""),
-            "Payload":     json.dumps(e.get("payload",{}))[:55]+"...",
-            t("au_hash"):  e.get("hash","")[:16]+"...",
+            t("au_ts"):    e.get("timestamp", "")[:19].replace("T", " "),
+            t("au_event"): e.get("event_type", ""),
+            t("au_actor"): e.get("actor", ""),
+            "Payload":     json.dumps(e.get("payload", {}))[:55]+"...",
+            t("au_hash"):  e.get("hash", "")[:16]+"...",
         })
-    st.dataframe(pd.DataFrame(rows),use_container_width=True,hide_index=True)
+    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
 
     # Chain visualization
     st.subheader("Hash chain" if st.session_state.lang=="en" else "Cadena de hashes")
-    n_show = min(7,len(entries))
+    n_show = min(7, len(entries))
     fig = go.Figure()
-    for i,e in enumerate(entries[-n_show:]):
+    for i, e in enumerate(entries[-n_show:]):
         fig.add_trace(go.Scatter(
-            x=[i],y=[0],mode="markers+text",showlegend=False,
-            marker=dict(size=44,color="#4361ee",line=dict(color="white",width=2)),
-            text=[e.get("event_type","").replace("_","\n")],
-            textfont=dict(size=8,color="white"),textposition="middle center"))
+            x=[i], y=[0], mode="markers+text", showlegend=False,
+            marker=dict(size=44, color="#4361ee", line=dict(color="white", width=2)),
+            text=[e.get("event_type", "").replace("_", "\n")],
+            textfont=dict(size=8, color="white"), textposition="middle center"))
         if i>0:
-            fig.add_shape(type="line",x0=i-0.88,y0=0,x1=i-0.12,y1=0,
-                          line=dict(color="#4361ee",width=2,
+            fig.add_shape(type="line", x0=i-0.88, y0=0, x1=i-0.12, y1=0,
+                          line=dict(color="#4361ee", width=2,
                                     dash="dot" if not ok else "solid"))
-            fig.add_annotation(x=i-0.5,y=0.35,
+            fig.add_annotation(x=i-0.5, y=0.35,
                                text=f"hash:{e.get('previous_hash','')[:6]}...",
-                               showarrow=False,font=dict(size=8,color="black"))
+                               showarrow=False, font=dict(size=8, color="black"))
     
     fig.update_layout(
-        height=210,showlegend=False,paper_bgcolor="white",plot_bgcolor="white",
-        xaxis=dict(showgrid=False,showticklabels=False,zeroline=False),
-        yaxis=dict(showgrid=False,showticklabels=False,zeroline=False,range=[-0.5,0.9]),
-        margin=dict(t=10,b=10,l=10,r=10))
+        height=210, showlegend=False, paper_bgcolor="white", plot_bgcolor="white",
+        xaxis=dict(showgrid=False, showticklabels=False, zeroline=False),
+        yaxis=dict(showgrid=False, showticklabels=False, zeroline=False, range=[-0.5, 0.9]),
+        margin=dict(t=10, b=10, l=10, r=10))
         
-    st.plotly_chart(fig,use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True)
     st.caption(
         "Each block: timestamp + event + payload + prev_hash → SHA-256. "
         "Any modification breaks the chain and is detectable." if st.session_state.lang=="en" else
