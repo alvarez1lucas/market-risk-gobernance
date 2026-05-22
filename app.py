@@ -332,9 +332,20 @@ def page_market_data():
                              line=dict(color="#f72585",width=1),
                              fillcolor="rgba(247,37,133,0.12)",name="vol"),row=3,col=1)
     
-    fig.update_layout(**LAYOUT)
-    fig.update_layout(height=500,showlegend=False)
-    st.plotly_chart(_aplicar_colores_negros(fig),use_container_width=True)
+    # ── CONFIGURACIÓN EXPLÍCITA PARA EVITAR EL 'UNDEFINED' EN SUBPLOTS ──
+    fig.update_layout(
+        paper_bgcolor="white", 
+        plot_bgcolor="#f8fafc",
+        margin=dict(t=60, b=35, l=40, r=20), # Margen 't' amplio para dar espacio a los títulos
+        height=500,
+        showlegend=False
+    )
+    
+    # Estilizado de ejes seguro aplicado a nivel global para todas las sub-gráficas
+    fig.update_xaxes(showgrid=True, gridcolor="#e2e8f0", linecolor="#cbd5e1")
+    fig.update_yaxes(showgrid=True, gridcolor="#e2e8f0", linecolor="#cbd5e1")
+
+    st.plotly_chart(_aplicar_colores_negros(fig), use_container_width=True)
 
     col_l,col_r = st.columns(2)
     with col_l:
