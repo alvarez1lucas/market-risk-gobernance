@@ -1056,35 +1056,36 @@ def page_audit():
             align="center"
         )
 
-    # 2. Inyectar todos los nodos juntos en un scatter único (capa superior)
+# 2. Inyectar todos los nodos juntos en un scatter único (capa superior)
     fig.add_trace(go.Scatter(
         x=x_coords,
         y=y_coords,
         mode="markers+text",
         showlegend=False,
         marker=dict(
-            size=50, 
+            size=45, 
             color="#4361ee" if ok else "#ef476f",
             line=dict(color="white", width=2)
         ),
         text=node_texts,
         textposition="middle center",
-        textfont=dict(size=8, color="white", family="sans-serif")
+        textfont=dict(size=8, color="white", family="sans-serif") # Mantenemos blanco interno
     ))
         
-    # 3. Limpieza visual absoluta de grillas cartesianas
+    # 3. Limpieza visual absoluta de grillas cartesianas usando fondos transparentes limpios
     fig.update_layout(
         height=220,
         showlegend=False,
-        paper_bgcolor="white",
-        plot_bgcolor="white",
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
         xaxis=dict(showgrid=False, showticklabels=False, zeroline=False, range=[-0.6, n_show - 0.4]),
         yaxis=dict(showgrid=False, showticklabels=False, zeroline=False, range=[-0.6, 0.8]),
         margin=dict(t=10, b=10, l=15, r=15)
     )
         
-    # Aplicar helper de color por referencia de forma segura antes de renderizar
-    _aplicar_colores_negros(fig)
+    # EVITAMOS pasarle el helper que rompe los textos blancos internos de las burbujas,
+    # o si es obligatorio usarlo, lo corremos ANTES de dibujar los nodos de texto.
+    # Para asegurar que funcione idéntico al de Gobernanza, renderizamos directo:
     
     st.plotly_chart(fig, use_container_width=True)
     st.caption(
