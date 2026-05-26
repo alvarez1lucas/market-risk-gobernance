@@ -1022,33 +1022,71 @@ def page_audit():
         })
     st.dataframe(pd.DataFrame(rows),use_container_width=True,hide_index=True)
 
-    # Chain visualization
+    # ── Chain visualization (Sección Corregida) ───────────────────────────────
     st.subheader("Hash chain" if st.session_state.lang=="en" else "Cadena de hashes")
-    n_show = min(7,len(entries))
-    fig = go.Figure()
-    for i,e in enumerate(entries[-n_show:]):
-        fig.add_trace(go.Scatter(
-            x=[i],y=[0],mode="markers+text",showlegend=False,
-            marker=dict(size=44,color="#4361ee",line=dict(color="white",width=2)),
-            text=[e.get("event_type","").replace("_","\n")],
-            textfont=dict(size=8,color="white"),textposition="middle center"))
-        if i>0:
-            fig.add_shape(type="line",x0=i-0.88,y0=0,x1=i-0.12,y1=0,
-                          line=dict(color="#4361ee",width=2,
-                                    dash="dot" if not ok else "solid"))
-            fig.add_annotation(x=i-0.5,y=0.35,
-                               text=f"hash:{e.get('previous_hash','')[:6]}...",
-                               showarrow=False,font=dict(size=8,color="black"))
     
-    # Forzar una limpieza visual total del plano cartesiano inútil en diagramas de flujo secuenciales
-    fig.update_layout(
-        height=210,showlegend=False,paper_bgcolor="white",plot_bgcolor="white",
-        xaxis=dict(showgrid=False,showticklabels=False,zeroline=False,title=None),
-        yaxis=dict(showgrid=False,showticklabels=False,zeroline=False,range=[-0.5,0.9],title=None),
-        margin=dict(t=10,b=10,l=10,r=10),
-        title="Hash chain" if st.session_state.lang=="en" else "Cadena de hashes")
+    n_show = min(7, len(entries))
+    sub_entries = entries[-n_show:]
+    
+    fig = go.Figure()
+    
+    # Consolidamos arrays planos para evitar errores de auto-scaling en el eje X
+    x_coords = list(range(n_show))
+    y_coords = [0] * n_show
+    node_texts = [e.get("event_type", "").replace("_", "<br>") for e in sub_entries]
+    
+    # 1. Dibujar conectores y anotaciones de hashes primero (capa inferior)
+    for i in range(1, n_show):
+        line_color = "#4361ee" if ok else "#ef476f"
+        line_dash = "solid" if ok else "dot"
         
-    st.plotly_chart(_aplicar_colores_negros(fig),use_container_width=True)
+        fig.add_shape(
+            type="line",
+            x0=i - 1 + 0.15, y0=0, x1=i - 0.15, y1=0,
+            line=dict(color=line_color, width=3, dash=line_dash)
+        )
+        
+        prev_h = sub_entries[i].get("previous_hash", "")
+        hash_display = prev_h[:6] if prev_h else "000000"
+        fig.add_annotation(
+            x=i - 0.5, y=0.25,
+            text=f"prev_hash:<br><b>{hash_display}</b>",
+            showarrow=False,
+            font=dict(size=8, color="#475569"),
+            align="center"
+        )
+
+    # 2. Inyectar todos los nodos juntos en un scatter único (capa superior)
+    fig.add_trace(go.Scatter(
+        x=x_coords,
+        y=y_coords,
+        mode="markers+text",
+        showlegend=False,
+        marker=dict(
+            size=50, 
+            color="#4361ee" if ok else "#ef476f",
+            line=dict(color="white", width=2)
+        ),
+        text=node_texts,
+        textposition="middle center",
+        textfont=dict(size=8, color="white", family="sans-serif")
+    ))
+        
+    # 3. Limpieza visual absoluta de grillas cartesianas
+    fig.update_layout(
+        height=220,
+        showlegend=False,
+        paper_bgcolor="white",
+        plot_bgcolor="white",
+        xaxis=dict(showgrid=False, showticklabels=False, zeroline=False, range=[-0.6, n_show - 0.4]),
+        yaxis=dict(showgrid=False, showticklabels=False, zeroline=False, range=[-0.6, 0.8]),
+        margin=dict(t=10, b=10, l=15, r=15)
+    )
+        
+    # Aplicar helper de color por referencia de forma segura antes de renderizar
+    _aplicar_colores_negros(fig)
+    
+    st.plotly_chart(fig, use_container_width=True)
     st.caption(
         "Each block: timestamp + event + payload + prev_hash → SHA-256. "
         "Any modification breaks the chain and is detectable." if st.session_state.lang=="en" else
