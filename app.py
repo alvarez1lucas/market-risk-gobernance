@@ -614,17 +614,32 @@ def page_stress():
     fig3 = go.Figure()
     fig3.add_trace(go.Histogram(x=pnl,nbinsx=150,histnorm="probability density",
                                 marker_color="#4361ee",opacity=0.6,name="t-Student (df=5)"))
-    for lb,pct in [("VaR 99.5%",0.5),("VaR 99%",1.0),("VaR 97.5%",2.5)]:
-        v = np.percentile(pnl,pct)
-        fig3.add_vline(x=v,line_dash="dash",line_width=1.5,
-                       annotation_text=f"{lb}:{v:.4f}",annotation_position="top right")
-    fig3.update_layout(**LAYOUT)
-    fig3.update_layout(height=270,xaxis_title="P&L", title=t("st_mc"))
-    st.plotly_chart(_aplicar_colores_negros(fig3),use_container_width=True)
-    c1,c2,c3 = st.columns(3)
-    c1.metric("VaR 99%",   f"{np.percentile(pnl,1):.5f}")
-    c2.metric("ES 97.5%",  f"{pnl[pnl<=np.percentile(pnl,2.5)].mean():.5f}")
-    c3.metric(t("st_worst"),f"{np.sort(pnl)[:100].mean():.5f}")
+    # Iteramos con enumerate para obtener un índice 'i'
+for i, (lb, pct) in enumerate([("VaR 99.5%", 0.5), ("VaR 99%", 1.0), ("VaR 97.5%", 2.5)]):
+    v = np.percentile(pnl, pct)
+    
+    # Escalonamos la posición del texto usando yshift
+    # 'i * 30' desplaza cada etiqueta hacia arriba 30 píxeles más que la anterior
+    fig3.add_vline(
+        x=v, 
+        line_dash="dash", 
+        line_width=1.5,
+        annotation_text=f"{lb}: {v:.4f}",
+        annotation_position="top right",
+        annotation_yshift=i * 30 
+    )
+
+fig3.update_layout(**LAYOUT)
+fig3.update_layout(
+    height=320, # Aumenté un poco la altura para dar espacio a las etiquetas
+    title=t("st_mc"),
+    xaxis=dict(
+        title=dict(text="P&L", font=dict(color="black", size=14)), # Color negro
+        tickfont=dict(color="black") # Color negro para los números del eje
+    )
+)
+
+st.plotly_chart(_aplicar_colores_negros(fig3), use_container_width=True)
 
 # ─── Regime Detection ─────────────────────────────────────────────────────────
 def page_regime():
