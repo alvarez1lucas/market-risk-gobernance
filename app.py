@@ -334,6 +334,7 @@ def page_market_data():
     
     # ── CONFIGURACIÓN EXPLÍCITA PARA EVITAR EL 'UNDEFINED' EN SUBPLOTS ──
     fig.update_layout(
+        title_text="",
         paper_bgcolor="white", 
         plot_bgcolor="#f8fafc",
         margin=dict(t=60, b=35, l=40, r=20), # Margen 't' amplio para dar espacio a los títulos
