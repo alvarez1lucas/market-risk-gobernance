@@ -606,40 +606,52 @@ def page_stress():
         st.plotly_chart(_aplicar_colores_negros(fig2),use_container_width=True)
 
     st.subheader(t("st_mc"))
+    
+    # 1. Definir los datos primero
     np.random.seed(42)
     ret = synth_returns()
-    mu,sig = ret.mean(),ret.std()
-    z   = np.random.standard_t(5,10000)
-    pnl = mu+sig*z
-    fig3 = go.Figure()
-    fig3.add_trace(go.Histogram(x=pnl,nbinsx=150,histnorm="probability density",
-                                marker_color="#4361ee",opacity=0.6,name="t-Student (df=5)"))
-    # Iteramos con enumerate para obtener un índice 'i'
-for i, (lb, pct) in enumerate([("VaR 99.5%", 0.5), ("VaR 99%", 1.0), ("VaR 97.5%", 2.5)]):
-    v = np.percentile(pnl, pct)
+    mu, sig = ret.mean(), ret.std()
+    z = np.random.standard_t(5, 10000)
+    pnl = mu + sig * z
     
-    # Escalonamos la posición del texto usando yshift
-    # 'i * 30' desplaza cada etiqueta hacia arriba 30 píxeles más que la anterior
-    fig3.add_vline(
-        x=v, 
-        line_dash="dash", 
-        line_width=1.5,
-        annotation_text=f"{lb}: {v:.4f}",
-        annotation_position="top right",
-        annotation_yshift=i * 30 
+    # 2. Crear la figura
+    fig3 = go.Figure()
+    fig3.add_trace(go.Histogram(
+        x=pnl, 
+        nbinsx=150, 
+        histnorm="probability density",
+        marker_color="#4361ee", 
+        opacity=0.6, 
+        name="t-Student (df=5)"
+    ))
+
+    # 3. Iterar correctamente asegurando que 'pnl' está disponible
+    # Asegúrate de que este bloque esté identado dentro del mismo nivel que el resto
+    var_list = [("VaR 99.5%", 0.5), ("VaR 99%", 1.0), ("VaR 97.5%", 2.5)]
+    for i, (lb, pct) in enumerate(var_list):
+        v = np.percentile(pnl, pct)
+        fig3.add_vline(
+            x=v, 
+            line_dash="dash", 
+            line_width=1.5,
+            annotation_text=f"{lb}: {v:.4f}",
+            annotation_position="top right",
+            annotation_yshift=i * 30 
+        )
+
+    # 4. Actualizar layout
+    fig3.update_layout(**LAYOUT)
+    fig3.update_layout(
+        height=320,
+        title=t("st_mc"),
+        xaxis=dict(
+            title=dict(text="P&L", font=dict(color="black", size=14)),
+            tickfont=dict(color="black")
+        )
     )
 
-fig3.update_layout(**LAYOUT)
-fig3.update_layout(
-    height=320, # Aumenté un poco la altura para dar espacio a las etiquetas
-    title=t("st_mc"),
-    xaxis=dict(
-        title=dict(text="P&L", font=dict(color="black", size=14)), # Color negro
-        tickfont=dict(color="black") # Color negro para los números del eje
-    )
-)
-
-st.plotly_chart(_aplicar_colores_negros(fig3), use_container_width=True)
+    # 5. Renderizar
+    st.plotly_chart(_aplicar_colores_negros(fig3), use_container_width=True)
 
 # ─── Regime Detection ─────────────────────────────────────────────────────────
 def page_regime():
