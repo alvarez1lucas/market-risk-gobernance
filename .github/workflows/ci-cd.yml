@@ -1,0 +1,66 @@
+name: AI Governance CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  lint-and-validate:
+    name: Code Validation & Governance Run
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Código
+      uses: actions/checkout@v4
+      with:
+        submodules: 'true' # Clona submódulos si están configurados en el repositorio
+
+    - name: Configurar Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip' # Cache dinámico de dependencias para acelerar ejecuciones
+
+    - name: Instalar Dependencias
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        # Agregamos dependencias de testing/formatting si las usas
+        pip install pytest flake8
+
+    - name: Lint con Flake8 (Calidad de Código)
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings.
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Ejecutar Pipeline de Gobernanza (MRR Engine & OPA)
+      run: |
+        # Esto certifica que el model_registry.yaml compila y las políticas pasan sin romper el core
+        python run_governance.py
+
+  docker-build:
+    name: Build Docker Image
+    needs: lint-and-validate
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Código
+      uses: actions/checkout@v4
+      with:
+        submodules: 'true'
+
+    - name: Set up Docker Buildx
+      uses: actions/setup-buildx-action@v3
+
+    - name: Build Docker Image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: false # Cambiar a true si configuras logins como DockerHub o GitHub Packages (GHCR)
+        tags: ai-governance-framework:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
