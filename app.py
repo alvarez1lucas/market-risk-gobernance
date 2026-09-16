@@ -50,12 +50,12 @@ TX = {
  "nav":"Navigation",
  "pages":["📈 Market Data","🤖 Models","✅ VaR Backtesting","⚠️ Stress Testing",
            "🧠 Regime Detection","💬 NLP Sentiment","🔮 Conformal Prediction",
-           "📋 SR 11-7 Governance","🗂️ Audit Trail"],
+           "📋 SR 26-2 Governance","🗂️ Audit Trail"],
  "no_data":"Run `python run_all.py` first — showing synthetic demo data",
  "synth_note":"Synthetic demo data",
  "approved":"APPROVED","review":"UNDER REVIEW","rejected":"REJECTED",
  "model_status":"Model Status",
- "kpi_zone":"Basel III Zone","kpi_sr117":"SR 11-7 Score",
+ "kpi_zone":"Basel III Zone","kpi_sr117":"SR 26-2 Score",
  "kpi_regime":"Current Regime","kpi_sent":"Sentiment","kpi_cp":"CP Coverage",
  # Market Data
  "md_title":"Market Data & Feature Engineering",
@@ -103,12 +103,12 @@ TX = {
  "cp_nonconf":"Nonconformity scores distribution","cp_adaptive":"Adaptive conformal VaR (rolling 60d)",
  "cp_compare":"Classical vs Conformal",
  # Governance
- "go_title":"SR 11-7 Governance & EU AI Act",
+ "go_title":"SR 26-2 Governance & EU AI Act",
  "go_sub":"NB 07 — three-pillar model validation · Model Card · regulatory compliance checklist",
- "go_score":"SR 11-7 Score","go_status":"Validation status",
+ "go_score":"SR 26-2 Score","go_status":"Validation status",
  "go_p1":"Conceptual Soundness","go_p2":"Ongoing Monitoring","go_p3":"Outcomes Analysis",
  "go_limits":"Documented limitations","go_euai":"EU AI Act compliance",
- "go_checks":"SR 11-7 Checks","go_regs":"Regulations covered","go_card":"Model Card",
+ "go_checks":"SR 26-2 Checks","go_regs":"Regulations covered","go_card":"Model Card",
  # Audit
  "au_title":"Audit Trail",
  "au_sub":"Immutable SHA-256 hash-chained event log (EU AI Act Art. 12 — Record-keeping)",
@@ -120,12 +120,12 @@ TX = {
  "nav":"Navegación",
  "pages":["📈 Datos de Mercado","🤖 Modelos","✅ Backtesting VaR","⚠️ Stress Testing",
            "🧠 Detección de Régimen","💬 Sentimiento NLP","🔮 Predicción Conformal",
-           "📋 Gobernanza SR 11-7","🗂️ Audit Trail"],
+           "📋 Gobernanza SR 26-2","🗂️ Audit Trail"],
  "no_data":"Ejecutar `python run_all.py` — mostrando datos sintéticos de Carson",
  "synth_note":"Datos sintéticos de demostración",
  "approved":"APROBADO","review":"EN REVISIÓN","rejected":"RECHAZADO",
  "model_status":"Estado del Modelo",
- "kpi_zone":"Zona Basel III","kpi_sr117":"Score SR 11-7",
+ "kpi_zone":"Zona Basel III","kpi_sr117":"Score SR 26-2",
  "kpi_regime":"Régimen Actual","kpi_sent":"Sentimiento","kpi_cp":"Cobertura CP",
  "md_title":"Datos de Mercado y Feature Engineering",
  "md_sub":"NB 01 & 02 — ingesta yfinance + FRED · pipeline de features (log-returns, vol, correlaciones, sentimiento)",
@@ -165,12 +165,12 @@ TX = {
  "cp_exc_cl":"Exceedances clásico","cp_exc_cp":"Exceedances conformal",
  "cp_nonconf":"Distribución de nonconformity scores","cp_adaptive":"VaR conformal adaptativo (rolling 60d)",
  "cp_compare":"Clásico vs Conformal",
- "go_title":"Gobernanza SR 11-7 y EU AI Act",
+ "go_title":"Gobernanza SR 26-2 y EU AI Act",
  "go_sub":"NB 07 — validación tres pilares · Model Card · checklist de cumplimiento regulatorio",
- "go_score":"Score SR 11-7","go_status":"Estado de validación",
+ "go_score":"Score SR 26-2","go_status":"Estado de validación",
  "go_p1":"Solidez Conceptual","go_p2":"Monitoreo Continuo","go_p3":"Análisis de Resultados",
  "go_limits":"Limitaciones documentadas","go_euai":"Cumplimiento EU AI Act",
- "go_checks":"Checks SR 11-7","go_regs":"Regulaciones cubiertas","go_card":"Model Card",
+ "go_checks":"Checks SR 26-2","go_regs":"Regulaciones cubiertas","go_card":"Model Card",
  "au_title":"Audit Trail",
  "au_sub":"Log de eventos inmutable con cadena SHA-256 (EU AI Act Art. 12 — Record-keeping)",
  "au_integrity":"Integridad de la cadena","au_events":"Eventos totales",
@@ -262,7 +262,7 @@ with st.sidebar:
     sl = {"approved":t("approved"),"conditional":t("review"),"rejected":t("rejected")}.get(status,status)
     st.markdown(f"**{t('model_status')}**")
     st.markdown(f"{ze} Basel III: **{zone.upper()}**")
-    st.markdown(f"{se} SR 11-7: **{sl}**")
+    st.markdown(f"{se} SR 26-2: **{sl}**")
     st.markdown(f"📊 Score: **{score:.0%}**")
     st.divider()
     st.caption("Market Risk DL Suite v1.0 · 2025")
@@ -334,7 +334,6 @@ def page_market_data():
     
     # ── CONFIGURACIÓN EXPLÍCITA PARA EVITAR EL 'UNDEFINED' EN SUBPLOTS ──
     fig.update_layout(
-        title_text="",
         paper_bgcolor="white", 
         plot_bgcolor="#f8fafc",
         margin=dict(t=60, b=35, l=40, r=20), # Margen 't' amplio para dar espacio a los títulos
@@ -607,52 +606,25 @@ def page_stress():
         st.plotly_chart(_aplicar_colores_negros(fig2),use_container_width=True)
 
     st.subheader(t("st_mc"))
-    
-    # 1. Definir los datos primero
     np.random.seed(42)
     ret = synth_returns()
-    mu, sig = ret.mean(), ret.std()
-    z = np.random.standard_t(5, 10000)
-    pnl = mu + sig * z
-    
-    # 2. Crear la figura
+    mu,sig = ret.mean(),ret.std()
+    z   = np.random.standard_t(5,10000)
+    pnl = mu+sig*z
     fig3 = go.Figure()
-    fig3.add_trace(go.Histogram(
-        x=pnl, 
-        nbinsx=150, 
-        histnorm="probability density",
-        marker_color="#4361ee", 
-        opacity=0.6, 
-        name="t-Student (df=5)"
-    ))
-
-    # 3. Iterar correctamente asegurando que 'pnl' está disponible
-    # Asegúrate de que este bloque esté identado dentro del mismo nivel que el resto
-    var_list = [("VaR 99.5%", 0.5), ("VaR 99%", 1.0), ("VaR 97.5%", 2.5)]
-    for i, (lb, pct) in enumerate(var_list):
-        v = np.percentile(pnl, pct)
-        fig3.add_vline(
-            x=v, 
-            line_dash="dash", 
-            line_width=1.5,
-            annotation_text=f"{lb}: {v:.4f}",
-            annotation_position="top right",
-            annotation_yshift=i * 30 
-        )
-
-    # 4. Actualizar layout
+    fig3.add_trace(go.Histogram(x=pnl,nbinsx=150,histnorm="probability density",
+                                marker_color="#4361ee",opacity=0.6,name="t-Student (df=5)"))
+    for lb,pct in [("VaR 99.5%",0.5),("VaR 99%",1.0),("VaR 97.5%",2.5)]:
+        v = np.percentile(pnl,pct)
+        fig3.add_vline(x=v,line_dash="dash",line_width=1.5,
+                       annotation_text=f"{lb}:{v:.4f}",annotation_position="top right")
     fig3.update_layout(**LAYOUT)
-    fig3.update_layout(
-        height=320,
-        title=t("st_mc"),
-        xaxis=dict(
-            title=dict(text="P&L", font=dict(color="black", size=14)),
-            tickfont=dict(color="black")
-        )
-    )
-
-    # 5. Renderizar
-    st.plotly_chart(_aplicar_colores_negros(fig3), use_container_width=True)
+    fig3.update_layout(height=270,xaxis_title="P&L", title=t("st_mc"))
+    st.plotly_chart(_aplicar_colores_negros(fig3),use_container_width=True)
+    c1,c2,c3 = st.columns(3)
+    c1.metric("VaR 99%",   f"{np.percentile(pnl,1):.5f}")
+    c2.metric("ES 97.5%",  f"{pnl[pnl<=np.percentile(pnl,2.5)].mean():.5f}")
+    c3.metric(t("st_worst"),f"{np.sort(pnl)[:100].mean():.5f}")
 
 # ─── Regime Detection ─────────────────────────────────────────────────────────
 def page_regime():
@@ -941,7 +913,7 @@ def page_governance():
         st.metric("Validation date",sr.get("validation_date","")[:10])
     with c3:
         st.markdown(f"**{t('go_regs')}**")
-        for r in ["Basel III FRTB (IMA)","SR 11-7 (Fed/OCC)","EU AI Act Annex III/IV","BCBS 239"]:
+        for r in ["Basel III FRTB (IMA)","SR 26-2 / OCC 2026-13","EU AI Act Annex III/IV","BCBS 239"]:
             st.markdown(f"✅ {r}")
         if Path("reports/model_card.html").exists():
             st.success(f"✅ {t('go_card')}: reports/model_card.html")
@@ -1050,72 +1022,33 @@ def page_audit():
         })
     st.dataframe(pd.DataFrame(rows),use_container_width=True,hide_index=True)
 
-    # ── Chain visualization (Sección Corregida) ───────────────────────────────
+    # Chain visualization
     st.subheader("Hash chain" if st.session_state.lang=="en" else "Cadena de hashes")
-    
-    n_show = min(7, len(entries))
-    sub_entries = entries[-n_show:]
-    
+    n_show = min(7,len(entries))
     fig = go.Figure()
+    for i,e in enumerate(entries[-n_show:]):
+        fig.add_trace(go.Scatter(
+            x=[i],y=[0],mode="markers+text",showlegend=False,
+            marker=dict(size=44,color="#4361ee",line=dict(color="white",width=2)),
+            text=[e.get("event_type","").replace("_","\n")],
+            textfont=dict(size=8,color="white"),textposition="middle center"))
+        if i>0:
+            fig.add_shape(type="line",x0=i-0.88,y0=0,x1=i-0.12,y1=0,
+                          line=dict(color="#4361ee",width=2,
+                                    dash="dot" if not ok else "solid"))
+            fig.add_annotation(x=i-0.5,y=0.35,
+                               text=f"hash:{e.get('previous_hash','')[:6]}...",
+                               showarrow=False,font=dict(size=8,color="black"))
     
-    # Consolidamos arrays planos para evitar errores de auto-scaling en el eje X
-    x_coords = list(range(n_show))
-    y_coords = [0] * n_show
-    node_texts = [e.get("event_type", "").replace("_", "<br>") for e in sub_entries]
-    
-    # 1. Dibujar conectores y anotaciones de hashes primero (capa inferior)
-    for i in range(1, n_show):
-        line_color = "#4361ee" if ok else "#ef476f"
-        line_dash = "solid" if ok else "dot"
-        
-        fig.add_shape(
-            type="line",
-            x0=i - 1 + 0.15, y0=0, x1=i - 0.15, y1=0,
-            line=dict(color=line_color, width=3, dash=line_dash)
-        )
-        
-        prev_h = sub_entries[i].get("previous_hash", "")
-        hash_display = prev_h[:6] if prev_h else "000000"
-        fig.add_annotation(
-            x=i - 0.5, y=0.25,
-            text=f"prev_hash:<br><b>{hash_display}</b>",
-            showarrow=False,
-            font=dict(size=8, color="#475569"),
-            align="center"
-        )
-
-# 2. Inyectar todos los nodos juntos en un scatter único (capa superior)
-    fig.add_trace(go.Scatter(
-        x=x_coords,
-        y=y_coords,
-        mode="markers+text",
-        showlegend=False,
-        marker=dict(
-            size=45, 
-            color="#4361ee" if ok else "#ef476f",
-            line=dict(color="white", width=2)
-        ),
-        text=node_texts,
-        textposition="middle center",
-        textfont=dict(size=8, color="white", family="sans-serif") # Mantenemos blanco interno
-    ))
-        
-    # 3. Limpieza visual absoluta de grillas cartesianas usando fondos transparentes limpios
+    # Forzar una limpieza visual total del plano cartesiano inútil en diagramas de flujo secuenciales
     fig.update_layout(
-        height=220,
-        showlegend=False,
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        xaxis=dict(showgrid=False, showticklabels=False, zeroline=False, range=[-0.6, n_show - 0.4]),
-        yaxis=dict(showgrid=False, showticklabels=False, zeroline=False, range=[-0.6, 0.8]),
-        margin=dict(t=10, b=10, l=15, r=15)
-    )
+        height=210,showlegend=False,paper_bgcolor="white",plot_bgcolor="white",
+        xaxis=dict(showgrid=False,showticklabels=False,zeroline=False,title=None),
+        yaxis=dict(showgrid=False,showticklabels=False,zeroline=False,range=[-0.5,0.9],title=None),
+        margin=dict(t=10,b=10,l=10,r=10),
+        title="Hash chain" if st.session_state.lang=="en" else "Cadena de hashes")
         
-    # EVITAMOS pasarle el helper que rompe los textos blancos internos de las burbujas,
-    # o si es obligatorio usarlo, lo corremos ANTES de dibujar los nodos de texto.
-    # Para asegurar que funcione idéntico al de Gobernanza, renderizamos directo:
-    
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(_aplicar_colores_negros(fig),use_container_width=True)
     st.caption(
         "Each block: timestamp + event + payload + prev_hash → SHA-256. "
         "Any modification breaks the chain and is detectable." if st.session_state.lang=="en" else
