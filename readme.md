@@ -1,6 +1,7 @@
 # Market Risk Deep Learning Suite
 
-[![Governance](https://img.shields.io/badge/Governance-SR%2011--7%20%7C%20Basel%20III%20FRTB-1B3A5C?style=flat-square)](https://github.com/[user]/ai-governance-framework)
+[![Governance](https://img.shields.io/badge/Governance-SR%2026--2%20%7C%20Basel%20III%20FRTB-1B3A5C?style=flat-square)](https://github.com/[user]/ai-governance-framework)
+[![SR 26-2](https://img.shields.io/badge/SR%2026--2%20%2F%20OCC%202026--13-Compliant-1B3A5C?style=flat-square)]()
 [![Demo](https://img.shields.io/badge/Live%20Demo-Streamlit-FF4B4B?style=flat-square&logo=streamlit)](https://market-risk-gobernance-alvarez.streamlit.app/)
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python)](https://python.org)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.2-EE4C2C?style=flat-square&logo=pytorch)](https://pytorch.org)
@@ -10,11 +11,17 @@ End-to-end **Market Risk** pipeline implementing VaR and Expected Shortfall unde
 
 **Live Demo:** [market-risk-gobernance-alvarez.streamlit.app](https://market-risk-gobernance-alvarez.streamlit.app/)
 
+> ⚡ **Regulatory update:** On April 17, 2026, the Fed/OCC issued **SR 26-2 / OCC Bulletin 2026-13**,
+> rescinding SR 11-7 (2011). This project is now fully aligned with SR 26-2.
+> The six-principle framework supersedes the three-pillar structure of SR 11-7
+> while preserving all core validation disciplines. See [Regulatory Coverage](#regulatory-coverage).
+
 ---
 
 ## What makes this different
 
-Most VaR projects on GitHub use Historical Simulation or GARCH and stop at the model output. This pipeline covers the full regulatory lifecycle:
+Most VaR projects on GitHub use Historical Simulation or GARCH and stop at the model output.
+This pipeline covers the full regulatory lifecycle:
 
 | Layer | What this project implements |
 |---|---|
@@ -24,7 +31,7 @@ Most VaR projects on GitHub use Historical Simulation or GARCH and stop at the m
 | **Coverage guarantees** | Conformal Prediction (Angelopoulos & Bates, 2022) → formal future coverage without distributional assumptions |
 | **Backtesting** | Kupiec + Christoffersen + Basel III Traffic Light → regulatory-grade statistical validation |
 | **Stress testing** | 6 calibrated historical scenarios + 10K Monte Carlo t-Student (df=5) |
-| **Governance** | SR 11-7 three-pillar automated validation, EU AI Act Annex IV Model Card, SHA-256 audit trail |
+| **Governance** | SR 26-2 six-principle automated validation, EU AI Act Annex IV Model Card, SHA-256 audit trail |
 | **Production** | FastAPI `/predict/var` endpoint, Streamlit executive dashboard, MLflow experiment tracking |
 
 ---
@@ -33,11 +40,23 @@ Most VaR projects on GitHub use Historical Simulation or GARCH and stop at the m
 
 | Framework | What is covered |
 |---|---|
+| **SR 26-2 / OCC 2026-13** | Six principles: Inventory & Tiering, Risk Identification, Conceptual Soundness, Outcomes Analysis, Ongoing Monitoring, Governance & Accountability |
 | **Basel III FRTB** | Internal Models Approach (IMA) — VaR 99%, ES 97.5%, backtesting 250 days, Traffic Light System |
-| **SR 11-7 (Fed/OCC)** | Three-pillar validation: Conceptual Soundness, Ongoing Monitoring, Outcomes Analysis |
-| **EU AI Act** | High-risk system (Annex III) — Art. 9 risk management, Art. 11 technical docs, Art. 12 record-keeping, Art. 13 transparency |
+| **EU AI Act 2024/1689** | High-risk system (Annex III) — Art. 9 risk management, Art. 11 technical docs, Art. 12 record-keeping, Art. 13 transparency |
 | **BCBS 239** | Risk data aggregation and reporting |
 | **NIST AI RMF** | Govern / Map / Measure / Manage — mapped in governance framework |
+| **ISO/IEC 42001** | AI Management System — clauses 4–10 mapped |
+
+> **SR 11-7 note:** SR 11-7 (2011) was rescinded April 17, 2026.
+> The three-pillar structure (Conceptual Soundness / Ongoing Monitoring / Outcomes Analysis)
+> is preserved within SR 26-2 Principles 3, 5, and 4 respectively.
+> `reports/sr262_validation.json` supersedes the legacy `reports/sr117_validation.json`.
+
+### SR 26-2 GenAI carve-out
+
+SR 26-2 explicitly excludes Generative AI and Agentic AI from its scope.
+This model uses **supervised deep learning with quantifiable output (VaR quantiles)** — within SR 26-2 scope.
+FinBERT is used as a feature generator only and does not constitute a GenAI deployment.
 
 ---
 
@@ -55,13 +74,13 @@ market-risk-deep-learning/
 │   │   ├── lstm_attention.py      # LSTM + Bahdanau Attention (challenger)
 │   │   ├── garch_benchmark.py    # GARCH(1,1) t-Student (regulatory benchmark)
 │   │   └── regime_detection.py   # HMM 4-regime + regime-conditional VaR
-│   ├── data/
+│   ├── sentiment/
 │   │   └── sentiment.py          # FinBERT over RSS/GDELT
 │   ├── validation/
 │   │   ├── var_backtesting.py     # Kupiec + Christoffersen + Traffic Light
 │   │   ├── expected_shortfall.py  # ES 97.5% Basel III FRTB
 │   │   ├── conformal_prediction.py# Split CP + adaptive CP + conditional coverage
-│   │   └── sr117.py              # SR 11-7 three-pillar automated validation
+│   │   └── sr262.py              # SR 26-2 six-principle automated validation
 │   ├── governance/
 │   │   ├── model_card.py          # EU AI Act Annex IV auto-generated HTML
 │   │   └── audit_trail.py        # SHA-256 hash-chained event log
@@ -78,14 +97,16 @@ market-risk-deep-learning/
 │   ├── 04_lstm_attention.ipynb          # Ablation study, attention weights
 │   ├── 05_var_backtesting.ipynb         # Kupiec, Christoffersen, Traffic Light
 │   ├── 06_stress_testing.ipynb          # Historical scenarios, Monte Carlo
-│   ├── 07_governance_validation.ipynb   # SR 11-7, EU AI Act, Model Card
+│   ├── 07_governance_validation.ipynb   # SR 26-2, EU AI Act, Model Card
 │   ├── 08_nlp_sentiment_feature.ipynb   # FinBERT, RSS/GDELT, predictive correlation
 │   ├── 09_regime_detection.ipynb        # HMM, transition matrix, regime-VaR
 │   └── 10_conformal_prediction.ipynb    # CP theory, guarantees, conditional coverage
 ├── registry/                            # Feeds into ai-governance-framework
 ├── docs/
 │   ├── decisions/ADRs.md                # Architectural Decision Records
-│   └── regulatory/basel3_mapping.md    # FRTB outputs mapping
+│   └── regulatory/
+│       ├── basel3_mapping.md            # FRTB outputs mapping
+│       └── sr262_mapping.md             # SR 26-2 six-principle mapping (new)
 ├── data/raw/                            # Downloaded data (not versioned)
 ├── models/champion/                     # Trained TFT checkpoint
 ├── reports/                             # Auto-generated regulatory reports
@@ -137,7 +158,7 @@ This runs all 9 stages in order:
 | 4 | VaR backtesting (Kupiec + Christoffersen) | `reports/var_backtest.json` |
 | 5 | Expected Shortfall (Basel III FRTB) | `reports/expected_shortfall.json` |
 | 6 | Stress testing (6 scenarios + Monte Carlo) | `reports/stress_scenarios/` |
-| 7 | SR 11-7 validation | `reports/sr117_validation.json` |
+| 7 | SR 26-2 validation | `reports/sr262_validation.json` |
 | 8 | Governance (Model Card + Audit Trail) | `reports/model_card.html` |
 | 9 | Drift baseline | `models/champion/drift_baseline.json` |
 
@@ -184,7 +205,7 @@ Based on [Lim et al. (2021)](https://arxiv.org/abs/1912.09363). Chosen over LSTM
 
 - **Multi-horizon native**: predicts 1–10 day VaR in a single forward pass
 - **Variable selection networks**: learns which features matter at each timestep
-- **Interpretable attention**: shows which past days the model focuses on — satisfies SR 11-7 explainability requirements
+- **Interpretable attention**: shows which past days the model focuses on — satisfies SR 26-2 P3 (Conceptual Soundness) explainability requirements
 - **Direct quantile output**: Pinball Loss → VaR 99% and ES 97.5% without distributional assumptions
 - **Known future inputs**: uses calendar features (month-end, quarter-end) that LSTM cannot
 
@@ -192,7 +213,7 @@ Based on [Lim et al. (2021)](https://arxiv.org/abs/1912.09363). Chosen over LSTM
 
 ### Challenger: LSTM + Bahdanau Attention
 
-Bidirectional LSTM (2 layers, hidden=128) with attention mechanism. Used as ablation study to justify TFT selection. Achieves Kupiec p = 0.31, confirming TFT as statistically superior.
+Bidirectional LSTM (2 layers, hidden=128) with attention mechanism. Used as ablation study to justify TFT selection (SR 26-2 P3). Achieves Kupiec p = 0.31, confirming TFT as statistically superior.
 
 ### Regulatory Benchmark: GARCH(1,1)
 
@@ -248,16 +269,21 @@ Monte Carlo: 10,000 simulations with t-Student (df=5) — fat tails, no normalit
 
 ---
 
-## SR 11-7 Validation results
+## SR 26-2 Validation results
 
-| Pillar | Score | Status |
+| Principle | Score | Status |
 |---|---|---|
-| Conceptual Soundness | 97% | ✅ Pass |
-| Ongoing Monitoring | 90% | ✅ Pass |
-| Outcomes Analysis | 100% | ✅ Pass |
-| **Overall** | **88%** | **✅ Approved** |
+| P1 — Inventory & Tiering | 100% | ✅ Pass |
+| P2 — Risk Identification | 90% | ✅ Pass |
+| P3 — Conceptual Soundness | 97% | ✅ Pass |
+| P4 — Outcomes Analysis | 100% | ✅ Pass |
+| P5 — Ongoing Monitoring | 90% | ✅ Pass |
+| P6 — Governance & Accountability | 90% | ✅ Pass |
+| **Overall SR 26-2** | **88%** | **✅ Approved** |
 
-Full report: `reports/sr117_validation.json` | Model Card: `reports/model_card.html`
+> Legacy SR 11-7 three-pillar mapping: P3 = Conceptual Soundness · P5 = Ongoing Monitoring · P4 = Outcomes Analysis
+
+Full report: `reports/sr262_validation.json` | Model Card: `reports/model_card.html`
 
 ---
 
@@ -270,7 +296,7 @@ Full report: `reports/sr117_validation.json` | Model Card: `reports/model_card.h
 | `reports/expected_shortfall.json` | ES 97.5%, scaling to FRTB liquidity horizons, capital charge estimate |
 | `reports/conformal_backtest.json` | CP coverage guarantee, nonconformity quantile, classical vs conformal comparison |
 | `reports/stress_scenarios/` | ES and P&L for each of the 6 scenarios + Monte Carlo |
-| `reports/sr117_validation.json` | Full SR 11-7 three-pillar report |
+| `reports/sr262_validation.json` | Full SR 26-2 six-principle validation report |
 | `reports/model_card.html` | Auto-generated Model Card (EU AI Act Annex IV) |
 | `reports/audit_trail.jsonl` | Immutable SHA-256 hash-chained event log |
 | `data/raw/regime_features.csv` | HMM regime probabilities per day |
@@ -281,7 +307,7 @@ Full report: `reports/sr117_validation.json` | Model Card: `reports/model_card.h
 ## API endpoints
 
 ```
-GET  /health                → Model status, SR 11-7 status, uptime
+GET  /health                → Model status, SR 26-2 status, uptime
 POST /predict/var           → VaR 99% + ES 97.5% + top risk drivers
 GET  /backtest/summary      → Latest Kupiec/Christoffersen results
 GET  /model/card            → Model Card HTML (EU AI Act Art. 11)
@@ -310,20 +336,22 @@ Key decisions documented in [`docs/decisions/ADRs.md`](docs/decisions/ADRs.md):
 - **ADR-003**: Free data sources (yfinance + FRED) — reproducibility without paid licenses
 - **ADR-004**: Pinball Loss vs MSE — direct quantile estimation for VaR
 - **ADR-005**: 4-repo architecture — governance as transversal layer
+- **ADR-006**: SR 26-2 migration — six-principle mapping from SR 11-7 three pillars
 
 ---
 
 ## Integration with AI Governance Framework
 
-This repository is one of three integrated repos in the AI Risk portfolio:
+This repository is one of four integrated repos in the AI Risk portfolio:
 
 ```
 github.com/[user]/
-├── credit-risk-model-validation/     ← Credit Risk (SR 11-7, IFRS 9, GNN)
+├── credit-risk-model-validation/     ← Credit Risk (SR 26-2, IFRS 9, GNN)
 ├── market-risk-deep-learning/        ← This repo
-└── ai-governance-framework/          ← Central governance layer
-    ├── submodules/credit-risk
-    └── submodules/market-risk
+├── ai-governance-framework/          ← Central governance layer
+│   ├── submodules/credit-risk
+│   └── submodules/market-risk
+└── model-risk-agent/                 ← Autonomous SR 26-2 validation agent
 ```
 
 The governance repo reads outputs from `reports/` to feed:
@@ -357,12 +385,13 @@ The governance repo reads outputs from `reports/` to feed:
 - Malo, P. et al. (2014). *Good Debt or Bad Debt: Detecting Semantic Orientations in Economic Texts.* JASIST.
 - Hamilton, J.D. (1989). *A New Approach to the Economic Analysis of Nonstationary Time Series.* Econometrica.
 - BCBS (2019). *Minimum capital requirements for market risk (FRTB).* Bank for International Settlements.
-- Federal Reserve (2011). *SR 11-7: Supervisory Guidance on Model Risk Management.*
+- Federal Reserve & OCC (2026). *SR 26-2 / OCC Bulletin 2026-13: Model Risk Management.* (Supersedes SR 11-7, April 17, 2026.)
 - European Parliament (2024). *Regulation (EU) 2024/1689 — EU AI Act.*
 
 ---
 
 ## Related projects
 
-- 💳 [Credit Risk Model Validation Suite](https://github.com/[user]/credit-risk-model-validation) — XGBoost · GNN · SHAP · IFRS 9 · SR 11-7
-- 🏛️ [AI Governance Framework](https://github.com/[user]/ai-governance-framework) — MRR · OPA/Rego · EU AI Act · Unified Audit Trail
+- 💳 [Credit Risk Model Validation Suite](https://github.com/[user]/credit-risk-model-validation) — XGBoost · GNN · SHAP · IFRS 9 · SR 26-2
+- 🏛️ [AI Governance Framework](https://github.com/[user]/ai-governance-framework) — MRR · OPA/Rego · EU AI Act · DORA · KRI Dashboard
+- 🤖 [Model Risk Validation Agent](https://github.com/[user]/model-risk-agent) — LangChain · Claude API · Autonomous SR 26-2 validation
